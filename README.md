@@ -6,6 +6,7 @@ study vulkan
 
 
 参考:
+- Vulkan SDK: [Link](https://vulkan.lunarg.com/)
 - 官方教程：[https://vulkan-tutorial.com/](https://vulkan-tutorial.com/)
 - 官方samples: [https://github.com/SaschaWillems/Vulkan](https://github.com/SaschaWillems/Vulkan) 
 - 详细书籍，学习手册：Vulkan Programming Guide
