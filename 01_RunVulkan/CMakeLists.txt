@@ -8,10 +8,12 @@ set(TARGET "01_RunVulkan")
 include(../cmake/FindVulkan.cmake)
 include(../cmake/FindSDL.cmake)
 
+set(INSTALL_PATH "${PROJECT_SOURCE_DIR}/bin")
+
 file(GLOB SRC_LIST "./*.cpp")
 source_group("source" FILES ${SRC_LIST})
 
-file(GLOB  HEAD_LIST "./*.h")
+file(GLOB  HEAD_LIST "./*.h" "./*.hpp")
 source_group("include" FILES ${HEAD_LIST})
 
 set(ALL_SOURCES
@@ -29,3 +31,5 @@ if (MSVC)
 endif (MSVC)
 
 target_link_libraries(${TARGET} PUBLIC Vulkan::Vulkan SDL2::SDL2)
+
+set_target_properties(${TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${INSTALL_PATH}")
