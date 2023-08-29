@@ -32,4 +32,7 @@ endif (MSVC)
 
 target_link_libraries(${TARGET} PUBLIC Vulkan::Vulkan SDL2::SDL2)
 
-set_target_properties(${TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${INSTALL_PATH}")
+set_target_properties(${TARGET}
+    PROPERTIES
+    CXX_STANDARD 17
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${INSTALL_PATH}")

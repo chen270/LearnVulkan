@@ -1,6 +1,8 @@
 #include "toy2d.h"
 #include "SDL.h"
-
+#include "SDL_vulkan.h"
+#include <vector>
+#include <iostream>
 
 #undef main // SDL内部也有main函数
 int main()
@@ -22,10 +24,22 @@ int main()
         return 1;
     }
 
+    // 典型的 vulkan C 接口写法, 两次调用
+    unsigned int count = 0;
+    SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
+    std::vector<const char*>extensions(count);
+    SDL_Vulkan_GetInstanceExtensions(window, &count, extensions.data());
+
+    for (const auto& extension : extensions)
+    {
+        std::cout << extension << std::endl;
+    }
+
+
     bool b_exit = true;
     SDL_Event event;
 
-    toy2d::Init();
+    toy2d::Init(extensions);
 
     while (b_exit)
     {

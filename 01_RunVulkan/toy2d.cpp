@@ -2,12 +2,13 @@
 #include "context.h"
 
 namespace toy2d{
-    void Init()
+    void Init(const std::vector<const char*>& extensions)
     {
-        Context::GetInstance();
+        Context::Init(extensions);
     }
 
     void Quit()
     {
+        Context::Quit();
     }
 }
