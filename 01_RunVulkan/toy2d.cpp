@@ -2,9 +2,9 @@
 #include "context.h"
 
 namespace toy2d{
-    void Init(const std::vector<const char*>& extensions)
+    void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func)
     {
-        Context::Init(extensions);
+        Context::Init(extensions, func);
     }
 
     void Quit()

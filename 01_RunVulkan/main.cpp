@@ -4,10 +4,12 @@
 #include <vector>
 #include <iostream>
 
+
+
 #undef main // SDL内部也有main函数
 int main()
 {
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Renderer* renderer = NULL;
     SDL_Texture* texture = NULL;
     SDL_Rect rect;
@@ -30,17 +32,25 @@ int main()
     std::vector<const char*>extensions(count);
     SDL_Vulkan_GetInstanceExtensions(window, &count, extensions.data());
 
+    //SDL_Vulkan_CreateSurface()
+
+    std::cout << "get extensions:" << std::endl;
     for (const auto& extension : extensions)
     {
         std::cout << extension << std::endl;
     }
+    std::cout << "--------" << std::endl;
 
+    toy2d::Init(extensions, [&](vk::Instance instance) {
+        VkSurfaceKHR surface;
+        if (!SDL_Vulkan_CreateSurface(window, instance, &surface)) {
+            throw std::runtime_error("SDL can not create surface!");
+        }
+        return surface;
+    });
 
     bool b_exit = true;
     SDL_Event event;
-
-    toy2d::Init(extensions);
-
     while (b_exit)
     {
         SDL_WaitEvent(&event);

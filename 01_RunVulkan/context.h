@@ -4,45 +4,53 @@
 #include <memory>
 #include <optional>
 #include "vulkan/vulkan.hpp"
+#include "toy2d.h"
 
-/**
- * @brief vulkan 渲染相关接口
- * 
- */
-class Context final
+namespace toy2d
 {
-public:
-    ~Context();
-
-    static Context &GetInstance();
-    static void Init(const std::vector<const char*>& extensions);
-    static void Quit();
-
-
-    struct QueueFamilyIndices final
+    /**
+     * @brief vulkan 渲染相关接口
+     *
+     */
+    class Context final
     {
-        std::optional<int32_t> grapghicsQueue;
+    public:
+        ~Context();
+
+        static Context& GetInstance();
+        static void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
+        static void Quit();
+
+
+        struct QueueFamilyIndices final
+        {
+            std::optional<int32_t> grapghicsQueue;
+        };
+
+    private:
+        Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
+
+        void createVulkanInstance(const std::vector<const char*>& extensions);
+        void pickupPhysicalDevice();
+        void createDevice();
+        void queryQueueFamilyIndices();
+        void getQueues();
+
+        /* data */
+        static std::unique_ptr<Context> m_instance;
+
+        vk::Instance m_vkInstance;
+        vk::PhysicalDevice m_phyDevice;
+        vk::Device m_Device;
+
+        vk::Queue m_graphicsQueue;
+        QueueFamilyIndices queueFamilyIndices;
+
+        // surface
+        vk::SurfaceKHR m_surface;
     };
 
-private:
-    Context(const std::vector<const char*>& extensions);
-
-    void createVulkanInstance(const std::vector<const char*>& extensions);
-    void pickupPhysicalDevice();
-    void createDevice();
-    void queryQueueFamilyIndices();
-    void getQueues();
-
-    /* data */
-    static std::unique_ptr<Context> m_instance;
-
-    vk::Instance m_vkInstance;
-    vk::PhysicalDevice m_phyDevice;
-    vk::Device m_Device;
-
-    vk::Queue m_graphicsQueue;
-    QueueFamilyIndices queueFamilyIndices;
-};
+}
 
 
 
