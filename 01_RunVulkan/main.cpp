@@ -16,10 +16,12 @@ int main()
     rect.h = 50;
     rect.w = 50;
 
+    const int width = 640;
+    const int height = 640;
     SDL_Window* window = SDL_CreateWindow("chen270",
         SDL_WINDOWPOS_UNDEFINED, // 默认居中
         SDL_WINDOWPOS_UNDEFINED,
-        640, 480,
+        width, height,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window) {
         SDL_Log("can not create window, err:%s\n", SDL_GetError());
@@ -47,7 +49,7 @@ int main()
             throw std::runtime_error("SDL can not create surface!");
         }
         return surface;
-    });
+    }, width, height);
 
     bool b_exit = true;
     SDL_Event event;

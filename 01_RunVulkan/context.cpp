@@ -31,6 +31,7 @@ namespace toy2d
 
     Context::~Context()
     {
+        m_vkInstance.destroySurfaceKHR(m_surface);
         m_Device.destroy();
         m_vkInstance.destroy();
     }
@@ -184,19 +185,49 @@ namespace toy2d
 
     void Context::createDevice()
     {
+        // swapchain
+        std::array extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+
         vk::DeviceCreateInfo createInfo;
 
         // 这里也可以设置扩展，但是如果在 instance 上创建扩展了，这里便会顺延下来，但也有独有的扩展和层
         //createInfo.setPEnabledExtensionNames();
 
         // queue
-        vk::DeviceQueueCreateInfo queueCreateInfo;
+        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 
         float propertity = 1.0f;
-        queueCreateInfo.setPQueuePriorities(&propertity)
-            .setQueueCount(1)
-            .setQueueFamilyIndex(queueFamilyIndices.grapghicsQueue.value());
-        createInfo.setQueueCreateInfos(queueCreateInfo);
+
+        if (queueFamilyIndices.grapghicsQueue.value() == queueFamilyIndices.presentQueue.value())
+        {
+            vk::DeviceQueueCreateInfo queueCreateInfo;
+            queueCreateInfo.setPQueuePriorities(&propertity)
+                .setQueueCount(1)
+                .setQueueFamilyIndex(queueFamilyIndices.grapghicsQueue.value());
+
+            queueCreateInfos.push_back(std::move(queueCreateInfo));
+        }
+        else
+        {
+            vk::DeviceQueueCreateInfo queueCreateInfo1;
+            queueCreateInfo1.setPQueuePriorities(&propertity)
+                .setQueueCount(1)
+                .setQueueFamilyIndex(queueFamilyIndices.grapghicsQueue.value());
+
+            queueCreateInfos.push_back(std::move(queueCreateInfo1));
+
+            vk::DeviceQueueCreateInfo queueCreateInfo2;
+            queueCreateInfo2.setPQueuePriorities(&propertity)
+                .setQueueCount(1)
+                .setQueueFamilyIndex(queueFamilyIndices.presentQueue.value());
+
+            queueCreateInfos.push_back(std::move(queueCreateInfo2));
+        }
+
+        createInfo.setQueueCreateInfos(queueCreateInfos)
+            .setPEnabledExtensionNames(extensions);
+
 
         m_Device = m_phyDevice.createDevice(createInfo);
     }
@@ -206,17 +237,37 @@ namespace toy2d
         auto properties = m_phyDevice.getQueueFamilyProperties();
         for (int i = 0; i < properties.size(); ++i)
         {
-            if (properties[i].queueFlags & vk::QueueFlagBits::eGraphics)
+            const auto& property = properties[i];
+            if (property.queueFlags & vk::QueueFlagBits::eGraphics)
             {
                 queueFamilyIndices.grapghicsQueue = i;
-                break;
             }
+
+            if (m_phyDevice.getSurfaceSupportKHR(i, m_surface))
+            {
+                queueFamilyIndices.presentQueue = i;
+            }
+
+            if (queueFamilyIndices)
+                break;
         }
     }
 
     void Context::getQueues()
     {
+        // vk::Queue
         m_graphicsQueue = m_Device.getQueue(queueFamilyIndices.grapghicsQueue.value(), 0);
+        m_presentQueue = m_Device.getQueue(queueFamilyIndices.presentQueue.value(), 0);
+    }
+
+    void Context::InitSwapchain(const int w, const int h)
+    {
+        m_swapchain.reset(new swapchain(w, h));
+    }
+
+    void Context::DestroySwapchain()
+    {
+        m_swapchain.reset();
     }
 
     void Context::Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func)

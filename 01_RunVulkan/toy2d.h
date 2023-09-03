@@ -1,4 +1,4 @@
-#ifndef __TOY2D_H__
+﻿#ifndef __TOY2D_H__
 #define __TOY2D_H__
 
 #include <vector>
@@ -11,7 +11,7 @@ namespace toy2d
     //std::function<void(vk::Instance instance)> fun;
     //using CreateSurfaceFunc = std::function<VkSurfaceKHR(vk::Instance)>;
 
-    void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
+    void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func, const int w, const int h);
     void Quit();
 }
 
