@@ -33,10 +33,18 @@ swapchain::swapchain(const int w, const int h)
     }
 
     m_swapchain = Context::GetInstance().GetDevice().createSwapchainKHR(createInfo);
+
+    getImages();
+    createImageViews();
 }
 
 swapchain::~swapchain()
 {
+    // 销毁 imageview
+    for (auto& view : m_imageViews) {
+        Context::GetInstance().GetDevice().destroyImageView(view);
+    }
+
     Context::GetInstance().GetDevice().destroySwapchainKHR(m_swapchain);
 }
 
@@ -78,6 +86,36 @@ void swapchain::queryInfo(const int w, const int h)
             m_swapchainInfo.presentMode = present;
             break;
         }
+    }
+}
+
+void swapchain::getImages()
+{
+   m_images = Context::GetInstance().GetDevice().getSwapchainImagesKHR(m_swapchain);
+}
+
+void swapchain::createImageViews()
+{
+    m_imageViews.resize(m_images.size());
+
+    for (int i = 0; i < m_images.size(); ++i)
+    {
+        vk::ImageViewCreateInfo createInfo;
+        vk::ComponentMapping mapping;
+        vk::ImageSubresourceRange range;
+        range.setBaseMipLevel(0)
+            .setLevelCount(1)
+            .setBaseArrayLayer(0)
+            .setLayerCount(1)
+            .setAspectMask(vk::ImageAspectFlagBits::eColor);
+
+        createInfo.setImage(m_images[i])
+            .setViewType(vk::ImageViewType::e2D)
+            .setComponents(mapping)
+            .setFormat(m_swapchainInfo.format.format)
+            .setSubresourceRange(range);
+
+        m_imageViews[i] = Context::GetInstance().GetDevice().createImageView(createInfo);
     }
 }
 
