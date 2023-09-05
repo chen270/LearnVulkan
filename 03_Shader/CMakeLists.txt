@@ -8,11 +8,14 @@ set(TARGET "03_Shader")
 include(../cmake/FindVulkan.cmake)
 include(../cmake/FindSDL.cmake)
 
-find_program(GLSLC_PROGRAM glslc REQUIRED)
-execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.vert -o ${CMAKE_SOURCE_DIR}/vert.spv)
-execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.frag -o ${CMAKE_SOURCE_DIR}/frag.spv)
 
 set(INSTALL_PATH "${PROJECT_SOURCE_DIR}/bin")
+add_definitions(-DDIR_PATH="${CMAKE_SOURCE_DIR}/")
+
+find_program(GLSLC_PROGRAM glslc REQUIRED)
+execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.vert -o ${INSTALL_PATH}/vert.spv)
+execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.frag -o ${INSTALL_PATH}/frag.spv)
+
 
 file(GLOB SRC_LIST "./*.cpp")
 source_group("source" FILES ${SRC_LIST})
