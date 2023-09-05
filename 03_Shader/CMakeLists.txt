@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 3.8.0)
 
-project(02_ImageView
+project(03_Shader
         LANGUAGES CXX
         DESCRIPTION "a test program made in vulkan")
-set(TARGET "02_ImageView")
+set(TARGET "03_Shader")
 
 include(../cmake/FindVulkan.cmake)
 include(../cmake/FindSDL.cmake)
+
+find_program(GLSLC_PROGRAM glslc REQUIRED)
+execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.vert -o ${CMAKE_SOURCE_DIR}/vert.spv)
+execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.frag -o ${CMAKE_SOURCE_DIR}/frag.spv)
 
 set(INSTALL_PATH "${PROJECT_SOURCE_DIR}/bin")
 
