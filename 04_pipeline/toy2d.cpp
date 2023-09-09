@@ -8,10 +8,12 @@ namespace toy2d{
         Context::Init(extensions, func);
         Context::GetInstance().InitSwapchain(w, h);
         Shader::Init(ReadWholeFile(S_PATH("./bin/vert.spv")), ReadWholeFile(S_PATH("./bin/frag.spv")));
+        Context::GetInstance().m_renderProcess->InitPipeline(w, h);
     }
 
     void Quit()
     {
+        Context::GetInstance().m_renderProcess->DestroyPipeline();
         Shader::Quit();
 
         // 需要先销毁 swapchain, 再销毁 device, 因为 swapchain 根据 device 创建的

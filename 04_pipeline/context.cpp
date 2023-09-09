@@ -27,6 +27,7 @@ namespace toy2d
         queryQueueFamilyIndices();
         createDevice();
         getQueues();
+        m_renderProcess.reset(new Render_process());
     }
 
     Context::~Context()

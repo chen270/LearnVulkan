@@ -16,11 +16,24 @@ public:
     static void Quit();
     static Shader &GetInstance();
 
+    std::vector<vk::PipelineShaderStageCreateInfo> GetStage();
+
+    vk::ShaderModule GetVertexModule() {
+        return m_vertModule;
+    }
+    vk::ShaderModule GetFragModule() {
+        return m_fragModule;
+    }
+
 private:
     Shader(const std::string& vertexSource, const std::string& fragSource);
 
+    void InitStage();
+
     vk::ShaderModule m_vertModule;
     vk::ShaderModule m_fragModule;
+
+    std::vector<vk::PipelineShaderStageCreateInfo> m_stageInfo;
 
     static std::unique_ptr<Shader> m_instancePtr;
 };

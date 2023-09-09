@@ -19,6 +19,8 @@ Shader::Shader(const std::string& vertexSource, const std::string& fragSource)
     createInfo.codeSize = fragSource.size();
     createInfo.pCode = reinterpret_cast<const uint32_t*>(fragSource.data());
     m_fragModule = Context::GetInstance().GetDevice().createShaderModule(createInfo);
+
+    InitStage();
 }
 
 Shader::~Shader()
@@ -41,6 +43,23 @@ void Shader::Quit()
 Shader& Shader::GetInstance()
 {
     return *m_instancePtr;
+}
+
+std::vector<vk::PipelineShaderStageCreateInfo> Shader::GetStage()
+{
+    return m_stageInfo;
+}
+
+void Shader::InitStage()
+{
+    m_stageInfo.resize(2);
+    m_stageInfo[0].setStage(vk::ShaderStageFlagBits::eVertex)
+        .setModule(m_vertModule)
+        .setPName("main"); // 入口函数
+
+    m_stageInfo[1].setStage(vk::ShaderStageFlagBits::eFragment)
+        .setModule(m_fragModule)
+        .setPName("main"); // 入口函数
 }
 
 }

@@ -6,6 +6,7 @@
 #include "vulkan/vulkan.hpp"
 #include "toy2d.h"
 #include "swapchain.h"
+#include "render_process.hpp"
 
 namespace toy2d
 {
@@ -64,7 +65,9 @@ namespace toy2d
         // surface
         vk::SurfaceKHR m_surface;
 
+    public:
         std::unique_ptr<swapchain>m_swapchain;
+        std::unique_ptr<Render_process>m_renderProcess;
     };
 
 }
