@@ -18,16 +18,20 @@ public:
         vk::PresentModeKHR presentMode;
     } m_swapchainInfo;
 
+    void createFramebuffers(const int w, const int h);
+
 private:
     vk::SwapchainKHR m_swapchain;
 
     std::vector<vk::Image> m_images;
     std::vector<vk::ImageView>m_imageViews;
+    std::vector<vk::Framebuffer>m_framebuffers;
 
 
     void queryInfo(const int w, const int h);
     void getImages();
     void createImageViews();
+    void destroyFramebuffers();
 };
 
 }

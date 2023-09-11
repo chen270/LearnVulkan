@@ -40,6 +40,8 @@ swapchain::swapchain(const int w, const int h)
 
 swapchain::~swapchain()
 {
+    destroyFramebuffers();
+
     // 销毁 imageview
     for (auto& view : m_imageViews) {
         Context::GetInstance().GetDevice().destroyImageView(view);
@@ -118,5 +120,27 @@ void swapchain::createImageViews()
         m_imageViews[i] = Context::GetInstance().GetDevice().createImageView(createInfo);
     }
 }
+
+void swapchain::createFramebuffers(const int w, const int h)
+{
+    m_framebuffers.resize(m_images.size());
+    for (int i = 0; i < m_framebuffers.size(); ++i) {
+        vk::FramebufferCreateInfo createInfo;
+        createInfo.setAttachments(m_imageViews[i])
+            .setWidth(w)
+            .setHeight(h)
+            .setRenderPass(Context::GetInstance().m_renderProcess->GetRenderPass())
+            .setLayers(1);
+        m_framebuffers[i] = Context::GetInstance().GetDevice().createFramebuffer(createInfo);
+    }
+}
+
+void swapchain::destroyFramebuffers()
+{
+    for (auto& framebuffer : m_framebuffers) {
+        Context::GetInstance().GetDevice().destroyFramebuffer(framebuffer);
+    }
+}
+
 
 }
