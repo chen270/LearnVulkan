@@ -46,7 +46,7 @@ namespace toy2d {
         vk::PipelineRasterizationStateCreateInfo rastInfo;
         rastInfo.setRasterizerDiscardEnable(false)
             .setCullMode(vk::CullModeFlagBits::eBack)
-            .setFrontFace(vk::FrontFace::eCounterClockwise)
+            .setFrontFace(vk::FrontFace::eClockwise)
             .setPolygonMode(vk::PolygonMode::eFill)
             .setLineWidth(1);
         createInfo.setPRasterizationState(&rastInfo);
@@ -112,7 +112,7 @@ namespace toy2d {
         vk::AttachmentDescription attachDesc;
         attachDesc.setFormat(Context::GetInstance().m_swapchain->m_swapchainInfo.format.format)
             .setInitialLayout(vk::ImageLayout::eUndefined)
-            .setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal)
+            .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
             .setStoreOp(vk::AttachmentStoreOp::eStore)
             .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)

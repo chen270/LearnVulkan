@@ -3,7 +3,7 @@
 #include "SDL_vulkan.h"
 #include <vector>
 #include <iostream>
-
+//#include "renderer.hpp"
 
 
 #undef main // SDL内部也有main函数
@@ -51,6 +51,8 @@ int main()
         return surface;
     }, width, height);
 
+    auto& toyRenderer = toy2d::GetRenderer();
+
     bool b_exit = true;
     SDL_Event event;
     while (b_exit)
@@ -63,7 +65,7 @@ int main()
             b_exit = false;
             break;
         }
-
+        toyRenderer.Render();
     }
 
     toy2d::Quit();

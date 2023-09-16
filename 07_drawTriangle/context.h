@@ -62,17 +62,18 @@ namespace toy2d
         vk::PhysicalDevice m_phyDevice;
         vk::Device m_Device;
 
-        vk::Queue m_graphicsQueue;
-        vk::Queue m_presentQueue;
         QueueFamilyIndices queueFamilyIndices;
 
         // surface
         vk::SurfaceKHR m_surface;
 
     public:
+        vk::Queue m_graphicsQueue;
+        vk::Queue m_presentQueue;
+
         std::unique_ptr<swapchain>m_swapchain;
         std::unique_ptr<Render_process>m_renderProcess;
-        std::unique_ptr<Renderer>m_renderer;
+        std::unique_ptr<toy2d::Renderer>m_renderer;
     };
 
 }

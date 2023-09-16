@@ -14,6 +14,7 @@ namespace toy2d {
         void InitPipeline(const int width, const int height);
         void InitRenderPass();
         vk::RenderPass& GetRenderPass() { return m_renderPass; }
+        vk::Pipeline& GetPipeline() { return m_pipeline; }
     private:
         vk::Pipeline m_pipeline;
         vk::PipelineLayout m_layout;

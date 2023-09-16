@@ -17,6 +17,7 @@ namespace toy2d{
 
     void Quit()
     {
+        Context::GetInstance().GetDevice().waitIdle(); // 让 cpu 等待所有操作完成
         Context::GetInstance().DestroyRenderer();
         Context::GetInstance().m_renderProcess.reset();
         Shader::Quit();
@@ -26,4 +27,8 @@ namespace toy2d{
 
         Context::Quit();
     }
+
+    Renderer& GetRenderer() {
+        return *Context::GetInstance().m_renderer;
+    };
 }
