@@ -63,6 +63,7 @@ int main()
             b_exit = false;
             break;
         }
+
     }
 
     toy2d::Quit();
