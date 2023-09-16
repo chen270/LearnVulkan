@@ -12,10 +12,12 @@ namespace toy2d{
         Context::GetInstance().m_renderProcess->InitRenderPass();
         Context::GetInstance().m_swapchain->createFramebuffers(w, h);
         Context::GetInstance().m_renderProcess->InitPipeline(w, h);
+        Context::GetInstance().InitRenderer();
     }
 
     void Quit()
     {
+        Context::GetInstance().DestroyRenderer();
         Context::GetInstance().m_renderProcess.reset();
         Shader::Quit();
 

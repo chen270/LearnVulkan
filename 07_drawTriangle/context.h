@@ -7,6 +7,7 @@
 #include "toy2d.h"
 #include "swapchain.h"
 #include "render_process.hpp"
+#include "renderer.hpp"
 
 namespace toy2d
 {
@@ -42,6 +43,9 @@ namespace toy2d
         void InitSwapchain(const int w, const int h);
         void DestroySwapchain();
 
+        void InitRenderer();
+        void DestroyRenderer();
+
     private:
         Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
 
@@ -68,6 +72,7 @@ namespace toy2d
     public:
         std::unique_ptr<swapchain>m_swapchain;
         std::unique_ptr<Render_process>m_renderProcess;
+        std::unique_ptr<Renderer>m_renderer;
     };
 
 }

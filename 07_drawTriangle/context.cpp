@@ -261,6 +261,16 @@ namespace toy2d
         m_presentQueue = m_Device.getQueue(queueFamilyIndices.presentQueue.value(), 0);
     }
 
+    void Context::InitRenderer()
+    {
+        m_renderer.reset(new Renderer());
+    }
+
+    void Context::DestroyRenderer()
+    {
+        m_renderer.reset();
+    }
+
     void Context::InitSwapchain(const int w, const int h)
     {
         m_swapchain.reset(new swapchain(w, h));
