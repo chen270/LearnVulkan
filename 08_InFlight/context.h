@@ -8,6 +8,7 @@
 #include "swapchain.h"
 #include "render_process.hpp"
 #include "renderer.hpp"
+#include "command_manager.hpp"
 
 namespace toy2d
 {
@@ -74,6 +75,7 @@ namespace toy2d
         std::unique_ptr<swapchain>m_swapchain;
         std::unique_ptr<Render_process>m_renderProcess;
         std::unique_ptr<toy2d::Renderer>m_renderer;
+        std::unique_ptr<CommandManager> commandManager;
     };
 
 }
