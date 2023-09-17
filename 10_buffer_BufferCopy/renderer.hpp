@@ -26,7 +26,8 @@ namespace toy2d {
         std::vector<vk::Semaphore> m_imageDrawFinishs;
         std::vector<vk::Fence> m_cmdFences;
 
-        std::unique_ptr<Buffer> m_vertexBuffer;
+        std::unique_ptr<Buffer> m_hostVertexBuffer; // CPU
+        std::unique_ptr<Buffer> m_deviceVertexBuffer; // GPU
 
         int m_maxFlightCount;
         int m_curFrame;

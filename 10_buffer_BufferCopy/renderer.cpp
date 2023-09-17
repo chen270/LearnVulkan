@@ -20,7 +20,8 @@ namespace toy2d {
     }
 
     Renderer::~Renderer() {
-        m_vertexBuffer.reset();
+        m_hostVertexBuffer.reset();
+        m_deviceVertexBuffer.reset();
 
         for (auto& i : m_cmdBuffers) {
             Context::GetInstance().m_commandManager->FreeCmd(i);
@@ -73,19 +74,46 @@ namespace toy2d {
     }
 
     void Renderer::createVertexBuffer() {
-        m_vertexBuffer.reset(new Buffer(sizeof(kVertices),
-            vk::BufferUsageFlagBits::eVertexBuffer,
+        // CPU
+        m_hostVertexBuffer.reset(new Buffer(sizeof(kVertices),
+            vk::BufferUsageFlagBits::eTransferSrc,
             vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+
+        // GPU
+        m_deviceVertexBuffer.reset(new Buffer(sizeof(kVertices),
+            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+            vk::MemoryPropertyFlagBits::eDeviceLocal));
     }
 
     void Renderer::bufferVertexData() {
         // 传输到 GPU
         auto& device = Context::GetInstance().GetDevice();
-        void* ptr = device.mapMemory(m_vertexBuffer->m_memory, 0, m_vertexBuffer->m_size);
+        void* ptr = device.mapMemory(m_hostVertexBuffer->m_memory, 0, m_hostVertexBuffer->m_size);
         {
             memcpy(ptr, kVertices.data(), sizeof(kVertices));
         }
-        device.unmapMemory(m_vertexBuffer->m_memory);
+        device.unmapMemory(m_hostVertexBuffer->m_memory);
+
+        auto cmdBuffer = Context::GetInstance().m_commandManager->CreateOneCommandBuffer();
+
+        vk::CommandBufferBeginInfo cmdbeginInfo;
+        cmdbeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit); // 这里设置为每次重置
+        cmdBuffer.begin(cmdbeginInfo); {
+            vk::BufferCopy region;
+            region.setSize(m_hostVertexBuffer->m_size)
+                .setSrcOffset(0)
+                .setDstOffset(0);
+            cmdBuffer.copyBuffer(m_hostVertexBuffer->m_buffer, m_deviceVertexBuffer->m_buffer, region);
+        }
+        cmdBuffer.end();
+
+        vk::SubmitInfo submitInfo;
+        submitInfo.setCommandBuffers(cmdBuffer);
+        Context::GetInstance().m_graphicsQueue.submit(submitInfo);
+
+        Context::GetInstance().GetDevice().waitIdle(); // 这里没有用信号，直接粗暴等待
+
+        Context::GetInstance().m_commandManager->FreeCmd(cmdBuffer);
     }
 
     void Renderer::DrawTriangle()
@@ -134,7 +162,7 @@ namespace toy2d {
             {
                 m_cmdBuffers[m_curFrame].bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
                 static vk::DeviceSize offset = 0;
-                m_cmdBuffers[m_curFrame].bindVertexBuffers(0, m_vertexBuffer->m_buffer, offset);
+                m_cmdBuffers[m_curFrame].bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
                 m_cmdBuffers[m_curFrame].draw(3, 1, 0, 0);
             }
             m_cmdBuffers[m_curFrame].endRenderPass();
