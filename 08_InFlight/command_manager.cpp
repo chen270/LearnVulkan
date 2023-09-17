@@ -1,41 +1,39 @@
-#include "toy2d/command_manager.hpp"
-#include "toy2d/context.hpp"
+#include "command_manager.hpp"
+#include "context.h"
 
 namespace toy2d {
 
 CommandManager::CommandManager() {
-    pool_ = createCommandPool();
+    m_pool = createCommandPool();
 }
 
 CommandManager::~CommandManager() {
-    auto& ctx = Context::Instance();
-    ctx.device.destroyCommandPool(pool_);
+    auto& device = Context::GetInstance().GetDevice();
+    device.destroyCommandPool(m_pool);
 }
 
 void CommandManager::ResetCmds() {
-    Context::Instance().device.resetCommandPool(pool_);
+    Context::GetInstance().GetDevice().resetCommandPool(m_pool);
 }
 
 vk::CommandPool CommandManager::createCommandPool() {
-    auto& ctx = Context::Instance();
+    auto& ctx = Context::GetInstance();
 
     vk::CommandPoolCreateInfo createInfo;
 
-    createInfo.setQueueFamilyIndex(ctx.queueInfo.graphicsIndex.value())
+    createInfo.setQueueFamilyIndex(ctx.GetQueueFamilyIndices().grapghicsQueue.value())
               .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
-    return ctx.device.createCommandPool(createInfo);
+    return ctx.GetDevice().createCommandPool(createInfo);
 }
 
 std::vector<vk::CommandBuffer> CommandManager::CreateCommandBuffers(std::uint32_t count) {
-    auto& ctx = Context::Instance();
-
     vk::CommandBufferAllocateInfo allocInfo;
-    allocInfo.setCommandPool(pool_)
+    allocInfo.setCommandPool(m_pool)
              .setCommandBufferCount(1)
              .setLevel(vk::CommandBufferLevel::ePrimary);
 
-    return ctx.device.allocateCommandBuffers(allocInfo);
+    return Context::GetInstance().GetDevice().allocateCommandBuffers(allocInfo);
 }
 
 vk::CommandBuffer CommandManager::CreateOneCommandBuffer() {
@@ -43,7 +41,8 @@ vk::CommandBuffer CommandManager::CreateOneCommandBuffer() {
 }
 
 void CommandManager::FreeCmd(vk::CommandBuffer buf) {
-    Context::Instance().device.freeCommandBuffers(pool_, buf);
+    auto& device = Context::GetInstance().GetDevice();
+    device.freeCommandBuffers(m_pool, buf);
 }
 
 }

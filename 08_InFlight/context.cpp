@@ -32,7 +32,6 @@ namespace toy2d
 
     Context::~Context()
     {
-        commandManager.reset();
         m_vkInstance.destroySurfaceKHR(m_surface);
         m_Device.destroy();
         m_vkInstance.destroy();
@@ -282,9 +281,9 @@ namespace toy2d
         m_swapchain.reset();
     }
 
-    void Context::initCommandPool()
+    void Context::InitCommandPool()
     {
-        commandManager = std::make_unique<CommandManager>();
+        m_commandManager = std::make_unique<CommandManager>();
     }
 
     void Context::Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func)

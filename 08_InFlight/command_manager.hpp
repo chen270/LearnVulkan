@@ -16,7 +16,7 @@ public:
     void FreeCmd(vk::CommandBuffer);
 
 private:
-    vk::CommandPool pool_;
+    vk::CommandPool m_pool;
 
     vk::CommandPool createCommandPool();
 };

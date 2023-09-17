@@ -47,6 +47,9 @@ namespace toy2d
         void InitRenderer();
         void DestroyRenderer();
 
+        void InitCommandPool();
+        void DestroyCommandPool();
+
     private:
         Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
 
@@ -75,7 +78,7 @@ namespace toy2d
         std::unique_ptr<swapchain>m_swapchain;
         std::unique_ptr<Render_process>m_renderProcess;
         std::unique_ptr<toy2d::Renderer>m_renderer;
-        std::unique_ptr<CommandManager> commandManager;
+        std::unique_ptr<CommandManager> m_commandManager;
     };
 
 }

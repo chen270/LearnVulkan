@@ -4,21 +4,17 @@
 namespace toy2d {
     Renderer::Renderer(int maxFlightCount) :m_maxFlightCount(maxFlightCount), m_curFrame(0)
     {
-        InitCmdPool();
-        AllocateCmdBuffer();
         createSems();
         createFence();
+        CreateCmdBuffer();
     }
 
     Renderer::~Renderer() {
-        auto& device = Context::GetInstance().GetDevice();
-
         for (auto& i : m_cmdBuffers) {
-            device.freeCommandBuffers(m_cmdPool, i);
+            Context::GetInstance().m_commandManager->FreeCmd(i);
         }
-        
-        device.destroyCommandPool(m_cmdPool);
 
+        auto& device = Context::GetInstance().GetDevice();
         for (auto& i : m_cmdFences) {
             device.destroyFence(i);
         }
@@ -32,23 +28,12 @@ namespace toy2d {
         }
     }
 
-    void Renderer::AllocateCmdBuffer() {
-        vk::CommandBufferAllocateInfo allocInfo;
-        allocInfo.setCommandPool(m_cmdPool)
-            .setCommandBufferCount(1)
-            .setLevel(vk::CommandBufferLevel::ePrimary);
-
+    void Renderer::CreateCmdBuffer() {
         m_cmdBuffers.resize(m_maxFlightCount);
+
         for (auto& cmd : m_cmdBuffers) {
-            cmd = Context::GetInstance().GetDevice().allocateCommandBuffers(allocInfo)[0];
+            cmd = Context::GetInstance().m_commandManager->CreateOneCommandBuffer();
         }
-    }
-
-    void Renderer::InitCmdPool() {
-        vk::CommandPoolCreateInfo createInfo;
-        createInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
-
-        m_cmdPool = Context::GetInstance().GetDevice().createCommandPool(createInfo);
     }
 
     void Renderer::createSems() {

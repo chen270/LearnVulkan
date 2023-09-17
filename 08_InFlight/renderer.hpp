@@ -13,12 +13,10 @@ namespace toy2d {
         void DrawTriangle();
 
     private:
-        void AllocateCmdBuffer();
-        void InitCmdPool();
+        void CreateCmdBuffer();
         void createSems();
         void createFence();
 
-        vk::CommandPool m_cmdPool;
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;
         std::vector<vk::Semaphore> m_imageDrawFinishs;
