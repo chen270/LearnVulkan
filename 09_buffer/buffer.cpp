@@ -28,7 +28,7 @@ void Buffer::createBuffer(size_t size, vk::BufferUsageFlags usage)
 
 void Buffer::bindingMem2Buf()
 {
-    Context::GetInstance().GetDevice().bindBufferMemory(m_buffer, m_memory, m_size);
+    Context::GetInstance().GetDevice().bindBufferMemory(m_buffer, m_memory, 0);
 }
 
 void Buffer::allocateMemory(const MemoryInfo& memInfo)

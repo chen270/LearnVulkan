@@ -3,6 +3,7 @@
 
 #include "vulkan/vulkan.hpp"
 #include "vertex.hpp"
+#include "buffer.hpp"
 
 namespace toy2d {
     class Renderer final
@@ -17,11 +18,15 @@ namespace toy2d {
         void CreateCmdBuffer();
         void createSems();
         void createFence();
+        void createVertexBuffer();
+        void bufferVertexData();
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;
         std::vector<vk::Semaphore> m_imageDrawFinishs;
         std::vector<vk::Fence> m_cmdFences;
+
+        std::unique_ptr<Buffer> m_vertexBuffer;
 
         int m_maxFlightCount;
         int m_curFrame;

@@ -2,14 +2,26 @@
 #include "context.h"
 
 namespace toy2d {
+    // 顶点设置
+    static std::array<Vertex, 3> kVertices = {
+        Vertex{0.0, -0.5} ,
+        Vertex{0.5, 0.5},
+        Vertex{-0.5, 0.5}
+    };
+
+
     Renderer::Renderer(int maxFlightCount) :m_maxFlightCount(maxFlightCount), m_curFrame(0)
     {
         createSems();
         createFence();
         CreateCmdBuffer();
+        createVertexBuffer();
+        bufferVertexData();
     }
 
     Renderer::~Renderer() {
+        m_vertexBuffer.reset();
+
         for (auto& i : m_cmdBuffers) {
             Context::GetInstance().m_commandManager->FreeCmd(i);
         }
@@ -60,15 +72,24 @@ namespace toy2d {
         }
     }
 
+    void Renderer::createVertexBuffer() {
+        m_vertexBuffer.reset(new Buffer(sizeof(kVertices),
+            vk::BufferUsageFlagBits::eVertexBuffer,
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+    }
+
+    void Renderer::bufferVertexData() {
+        // 传输到 GPU
+        auto& device = Context::GetInstance().GetDevice();
+        void* ptr = device.mapMemory(m_vertexBuffer->m_memory, 0, m_vertexBuffer->m_size);
+        {
+            memcpy(ptr, kVertices.data(), sizeof(kVertices));
+        }
+        device.unmapMemory(m_vertexBuffer->m_memory);
+    }
+
     void Renderer::DrawTriangle()
     {
-        // 顶点设置
-        static std::array<Vertex, 3> vertices = {
-            Vertex{0.0, -0.5} ,
-            Vertex{0.5, 0.5},
-            Vertex{-0.5, 0.5}
-        };
-
         // 开始绘制三角形
         auto& device = Context::GetInstance().GetDevice();
         auto& _swapchain = Context::GetInstance().m_swapchain;
@@ -112,6 +133,8 @@ namespace toy2d {
             m_cmdBuffers[m_curFrame].beginRenderPass(renderPassBeginInfo, {});
             {
                 m_cmdBuffers[m_curFrame].bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
+                static vk::DeviceSize offset = 0;
+                m_cmdBuffers[m_curFrame].bindVertexBuffers(0, m_vertexBuffer->m_buffer, offset);
                 m_cmdBuffers[m_curFrame].draw(3, 1, 0, 0);
             }
             m_cmdBuffers[m_curFrame].endRenderPass();
