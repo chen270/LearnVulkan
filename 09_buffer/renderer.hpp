@@ -2,6 +2,7 @@
 #define __RENDERER_H__
 
 #include "vulkan/vulkan.hpp"
+#include "vertex.hpp"
 
 namespace toy2d {
     class Renderer final

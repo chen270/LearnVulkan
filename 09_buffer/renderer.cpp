@@ -62,6 +62,13 @@ namespace toy2d {
 
     void Renderer::DrawTriangle()
     {
+        // 顶点设置
+        static std::array<Vertex, 3> vertices = {
+            Vertex{0.0, -0.5} ,
+            Vertex{0.5, 0.5},
+            Vertex{-0.5, 0.5}
+        };
+
         // 开始绘制三角形
         auto& device = Context::GetInstance().GetDevice();
         auto& _swapchain = Context::GetInstance().m_swapchain;
@@ -74,15 +81,15 @@ namespace toy2d {
 
         // 该接口会阻塞程序, 第二个参数为等待时间，这里设置为无限等待
         auto result = device.acquireNextImageKHR(_swapchain->m_swapchain, std::numeric_limits<uint64_t>::max(), m_imageAvaliables[m_curFrame]);
-        //device.acquireNextImage2KHR
+        // device.acquireNextImage2KHR
         if (result.result != vk::Result::eSuccess) {
             std::cout << "acquireNextImageKHR error" << std::endl;
         }
-        
+
         // 拿到 image 下标
         auto imageIndex = result.value;
 
-        // 清空命令buffer, 与之前代码 
+        // 清空命令buffer, 与之前代码
         // createInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer); 对应
         // 否则需要清空整个pool
         m_cmdBuffers[m_curFrame].reset();
@@ -119,7 +126,7 @@ namespace toy2d {
             .setSignalSemaphores(m_imageDrawFinishs[m_curFrame])
             .setWaitDstStageMask(pipe_stage_flags);
 
-        //vk::SubmitInfo submitInfo;
+        // vk::SubmitInfo submitInfo;
         Context::GetInstance().m_graphicsQueue.submit(submitInfo, m_cmdFences[m_curFrame]);
 
         // 开始显示

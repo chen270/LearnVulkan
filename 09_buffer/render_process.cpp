@@ -22,8 +22,13 @@ namespace toy2d {
         // 以下为渲染管线的流程
 
         // 1.vertex input
-        vk::PipelineVertexInputStateCreateInfo inputStateInfo;
-        createInfo.setPVertexInputState(&inputStateInfo);
+        auto attr = Vertex::GetAttribute();
+        auto binding = Vertex::GetBinding();
+
+        vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
+        vertexInputCreateInfo.setVertexAttributeDescriptions(attr)
+            .setVertexBindingDescriptions(binding);
+        createInfo.setPVertexInputState(&vertexInputCreateInfo);
 
         // 2.Vertex Assembly 图元设置
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
@@ -94,6 +99,14 @@ namespace toy2d {
 
     void Render_process::InitLayout()
     {
+        auto attr = Vertex::GetAttribute();
+        auto binding = Vertex::GetBinding();
+
+        vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
+        vertexInputCreateInfo.setVertexAttributeDescriptions(attr)
+            .setVertexBindingDescriptions(binding);
+
+
         // 设置 uniform 的布局
         vk::PipelineLayoutCreateInfo layoutInfo;
         m_layout = Context::GetInstance().GetDevice().createPipelineLayout(layoutInfo);
