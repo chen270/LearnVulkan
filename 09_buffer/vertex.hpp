@@ -23,8 +23,9 @@ namespace toy2d {
             binding.setBinding(0) // 上同
                 .setInputRate(vk::VertexInputRate::eVertex) // 顶点输入的数目
                 .setStride(sizeof(Vertex)); // 顶点数据之间的偏移
+            return binding;
         }
-    }
-};
+    };
+}
 
 #endif // __VERTEX_H__
