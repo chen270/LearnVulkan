@@ -2,6 +2,7 @@
 #include "shader.hpp"
 #include "context.h"
 #include "swapchain.h"
+#include "uniform.hpp"
 
 namespace toy2d {
     Render_process::Render_process(/* args */)
@@ -99,8 +100,13 @@ namespace toy2d {
 
     void Render_process::InitLayout()
     {
+        auto layout1 = createSetLayout();
+        auto layout2 = createSetLayout();
+        auto layoutArry = std::array<vk::DescriptorSetLayout, 2>{layout1, layout2};
+
         // 设置 uniform 的布局
         vk::PipelineLayoutCreateInfo layoutInfo;
+        layoutInfo.setSetLayouts(layoutArry);
         m_layout = Context::GetInstance().GetDevice().createPipelineLayout(layoutInfo);
     }
 
@@ -153,4 +159,11 @@ namespace toy2d {
         device.destroyRenderPass(m_renderPass);
     }
 
+    vk::DescriptorSetLayout Render_process::createSetLayout() {
+        vk::DescriptorSetLayoutCreateInfo createInfo;
+        auto binding = Uniform::GetBinding();
+        createInfo.setBindings(binding);
+
+        return Context::GetInstance().GetDevice().createDescriptorSetLayout(createInfo);
+    }
 }
