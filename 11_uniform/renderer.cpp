@@ -1,5 +1,6 @@
 ﻿#include "renderer.hpp"
 #include "context.h"
+#include "uniform.hpp"
 
 namespace toy2d {
     // 顶点设置
@@ -8,6 +9,7 @@ namespace toy2d {
         Vertex{0.5, 0.5},
         Vertex{-0.5, 0.5}
     };
+    static const Uniform kUniform{ Color{1, 0, 0} };
 
 
     Renderer::Renderer(int maxFlightCount) :m_maxFlightCount(maxFlightCount), m_curFrame(0)
@@ -73,6 +75,65 @@ namespace toy2d {
         }
     }
 
+    void Renderer::copyBuffer(vk::Buffer & src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset) {
+        auto cmdBuffer = Context::GetInstance().m_commandManager->CreateOneCommandBuffer();
+
+        vk::CommandBufferBeginInfo cmdbeginInfo;
+        cmdbeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit); // 这里设置为每次重置
+        cmdBuffer.begin(cmdbeginInfo); {
+            vk::BufferCopy region;
+            region.setSize(size)
+                .setSrcOffset(srcOffset)
+                .setDstOffset(dstOffset);
+            cmdBuffer.copyBuffer(src, dst, region);
+        }
+        cmdBuffer.end();
+
+        vk::SubmitInfo submitInfo;
+        submitInfo.setCommandBuffers(cmdBuffer);
+        Context::GetInstance().m_graphicsQueue.submit(submitInfo);
+
+        Context::GetInstance().GetDevice().waitIdle(); // 这里没有用信号，直接粗暴等待
+
+        Context::GetInstance().m_commandManager->FreeCmd(cmdBuffer);
+    }
+
+    void Renderer::createUniformBuffer() {
+        m_hostUniformBuffers.resize(m_maxFlightCount);
+        m_deviceUniformBuffers.resize(m_maxFlightCount);
+
+        for (auto& buffer : m_hostUniformBuffers) {
+            // CPU
+            buffer.reset(new Buffer(sizeof(kUniform),
+                vk::BufferUsageFlagBits::eTransferSrc,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+        }
+
+        for (auto& buffer : m_deviceUniformBuffers) {
+            // GPU
+            buffer.reset(new Buffer(sizeof(kUniform),
+                vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
+                vk::MemoryPropertyFlagBits::eDeviceLocal));
+        }
+    }
+
+    void Renderer::bufferUniformData() {
+        auto& device = Context::GetInstance().GetDevice();
+
+        for (int i = 0; i < m_hostUniformBuffers.size(); ++i) {
+            auto& host_buffer = m_hostUniformBuffers[i];
+
+            // 传输到 GPU
+            void* ptr = device.mapMemory(host_buffer->m_memory, 0, host_buffer->m_size);
+            {
+                memcpy(ptr, &kUniform, sizeof(kUniform));
+            }
+            device.unmapMemory(host_buffer->m_memory);
+
+            copyBuffer(host_buffer->m_buffer, m_deviceUniformBuffers[i]->m_buffer, host_buffer->m_size, 0, 0);
+        }
+    }
+
     void Renderer::createVertexBuffer() {
         // CPU
         m_hostVertexBuffer.reset(new Buffer(sizeof(kVertices),
@@ -94,26 +155,7 @@ namespace toy2d {
         }
         device.unmapMemory(m_hostVertexBuffer->m_memory);
 
-        auto cmdBuffer = Context::GetInstance().m_commandManager->CreateOneCommandBuffer();
-
-        vk::CommandBufferBeginInfo cmdbeginInfo;
-        cmdbeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit); // 这里设置为每次重置
-        cmdBuffer.begin(cmdbeginInfo); {
-            vk::BufferCopy region;
-            region.setSize(m_hostVertexBuffer->m_size)
-                .setSrcOffset(0)
-                .setDstOffset(0);
-            cmdBuffer.copyBuffer(m_hostVertexBuffer->m_buffer, m_deviceVertexBuffer->m_buffer, region);
-        }
-        cmdBuffer.end();
-
-        vk::SubmitInfo submitInfo;
-        submitInfo.setCommandBuffers(cmdBuffer);
-        Context::GetInstance().m_graphicsQueue.submit(submitInfo);
-
-        Context::GetInstance().GetDevice().waitIdle(); // 这里没有用信号，直接粗暴等待
-
-        Context::GetInstance().m_commandManager->FreeCmd(cmdBuffer);
+        copyBuffer(m_hostVertexBuffer->m_buffer, m_deviceVertexBuffer->m_buffer, m_hostVertexBuffer->m_size, 0, 0);
     }
 
     void Renderer::DrawTriangle()

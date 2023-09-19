@@ -20,6 +20,9 @@ namespace toy2d {
         void createFence();
         void createVertexBuffer();
         void bufferVertexData();
+        void createUniformBuffer();
+        void bufferUniformData();
+        void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;
@@ -28,6 +31,9 @@ namespace toy2d {
 
         std::unique_ptr<Buffer> m_hostVertexBuffer; // CPU
         std::unique_ptr<Buffer> m_deviceVertexBuffer; // GPU
+
+        std::vector<std::unique_ptr<Buffer>> m_hostUniformBuffers; // CPU
+        std::vector<std::unique_ptr<Buffer>> m_deviceUniformBuffers; // GPU
 
         int m_maxFlightCount;
         int m_curFrame;
