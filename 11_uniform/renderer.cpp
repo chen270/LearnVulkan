@@ -25,11 +25,14 @@ namespace toy2d {
         m_hostVertexBuffer.reset();
         m_deviceVertexBuffer.reset();
 
+        auto& device = Context::GetInstance().GetDevice();
+
+        device.destroyDescriptorPool(m_descriptorPool);
+
         for (auto& i : m_cmdBuffers) {
             Context::GetInstance().m_commandManager->FreeCmd(i);
         }
 
-        auto& device = Context::GetInstance().GetDevice();
         for (auto& i : m_cmdFences) {
             device.destroyFence(i);
         }
@@ -232,5 +235,28 @@ namespace toy2d {
         }
 
         m_curFrame = (m_curFrame + 1) % m_maxFlightCount;
+    }
+
+    void Renderer::createDescriptorPool() {
+        vk::DescriptorPoolCreateInfo createInfo;
+        vk::DescriptorPoolSize poolSize;
+        poolSize.setType(vk::DescriptorType::eUniformBuffer)
+            .setDescriptorCount(m_maxFlightCount);
+        createInfo.setMaxSets(m_maxFlightCount) // 创建个数
+            .setPoolSizes(poolSize); // 可以传递多个
+
+        m_descriptorPool = Context::GetInstance().GetDevice().createDescriptorPool(createInfo);
+    }
+
+    void Renderer::allocateSets() {
+        std::vector<vk::DescriptorSetLayout> layouts(m_maxFlightCount, Context::GetInstance().m_renderProcess->createSetLayout());
+
+        vk::DescriptorSetAllocateInfo allocInfo;
+        allocInfo.setDescriptorPool(m_descriptorPool)
+            .setDescriptorSetCount(m_maxFlightCount)
+            .setSetLayouts(layouts);
+
+        // 不需要销毁，因为是从 m_descriptorPool 里面创建的，会一起销毁
+        m_sets = Context::GetInstance().GetDevice().allocateDescriptorSets(allocInfo);
     }
 }

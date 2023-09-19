@@ -23,6 +23,8 @@ namespace toy2d {
         void createUniformBuffer();
         void bufferUniformData();
         void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
+        void createDescriptorPool();
+        void allocateSets();
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;
@@ -34,6 +36,9 @@ namespace toy2d {
 
         std::vector<std::unique_ptr<Buffer>> m_hostUniformBuffers; // CPU
         std::vector<std::unique_ptr<Buffer>> m_deviceUniformBuffers; // GPU
+
+        vk::DescriptorPool m_descriptorPool;
+        std::vector<vk::DescriptorSet> m_sets; // 描述符集
 
         int m_maxFlightCount;
         int m_curFrame;
