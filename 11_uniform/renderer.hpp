@@ -25,6 +25,7 @@ namespace toy2d {
         void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
         void createDescriptorPool();
         void allocateSets();
+        void updateSets();
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;

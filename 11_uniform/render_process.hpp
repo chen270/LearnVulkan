@@ -17,9 +17,10 @@ namespace toy2d {
         vk::Pipeline& GetPipeline() { return m_pipeline; }
         vk::DescriptorSetLayout createSetLayout();
 
+        vk::PipelineLayout m_layout;
+
     private:
         vk::Pipeline m_pipeline;
-        vk::PipelineLayout m_layout;
         vk::RenderPass m_renderPass;
 
         void DestroyPipeline();

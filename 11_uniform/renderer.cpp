@@ -9,7 +9,7 @@ namespace toy2d {
         Vertex{0.5, 0.5},
         Vertex{-0.5, 0.5}
     };
-    static const Uniform kUniform{ Color{1, 0, 0} };
+    static const Uniform kUniform{ Color{0, 1, 0} };
 
 
     Renderer::Renderer(int maxFlightCount) :m_maxFlightCount(maxFlightCount), m_curFrame(0)
@@ -19,6 +19,11 @@ namespace toy2d {
         CreateCmdBuffer();
         createVertexBuffer();
         bufferVertexData();
+        createUniformBuffer();
+        bufferUniformData();
+        createDescriptorPool();
+        allocateSets();
+        updateSets();
     }
 
     Renderer::~Renderer() {
@@ -207,6 +212,7 @@ namespace toy2d {
             {
                 m_cmdBuffers[m_curFrame].bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
                 static vk::DeviceSize offset = 0;
+                m_cmdBuffers[m_curFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, Context::GetInstance().m_renderProcess->m_layout, 0, m_sets[m_curFrame], {});
                 m_cmdBuffers[m_curFrame].bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
                 m_cmdBuffers[m_curFrame].draw(3, 1, 0, 0);
             }
@@ -258,5 +264,25 @@ namespace toy2d {
 
         // 不需要销毁，因为是从 m_descriptorPool 里面创建的，会一起销毁
         m_sets = Context::GetInstance().GetDevice().allocateDescriptorSets(allocInfo);
+    }
+
+    void Renderer::updateSets() {
+        for (int i = 0; i < m_sets.size(); ++i) {
+            auto& set = m_sets[i];
+            vk::DescriptorBufferInfo bufferInfo;
+            bufferInfo.setBuffer(m_deviceUniformBuffers[i]->m_buffer)
+                .setOffset(0)
+                .setRange(m_deviceUniformBuffers[i]->m_size);
+
+            vk::WriteDescriptorSet writer;
+            writer.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                .setBufferInfo(bufferInfo)
+                .setDstBinding(0) // shader binding 编号
+                .setDstSet(set)
+                .setDstArrayElement(0) // 绑定在 shader 中 uniform 数组的编号
+                .setDescriptorCount(1);
+
+            Context::GetInstance().GetDevice().updateDescriptorSets(writer, {});
+        }
     }
 }
