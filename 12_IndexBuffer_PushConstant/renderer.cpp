@@ -132,11 +132,7 @@ namespace toy2d {
             auto& host_buffer = m_hostUniformBuffers[i];
 
             // 传输到 GPU
-            void* ptr = device.mapMemory(host_buffer->m_memory, 0, host_buffer->m_size);
-            {
-                memcpy(ptr, &kUniform, sizeof(kUniform));
-            }
-            device.unmapMemory(host_buffer->m_memory);
+            memcpy(host_buffer->m_map, &kUniform, sizeof(kUniform));
 
             copyBuffer(host_buffer->m_buffer, m_deviceUniformBuffers[i]->m_buffer, host_buffer->m_size, 0, 0);
         }
@@ -157,11 +153,7 @@ namespace toy2d {
     void Renderer::bufferVertexData() {
         // 传输到 GPU
         auto& device = Context::GetInstance().GetDevice();
-        void* ptr = device.mapMemory(m_hostVertexBuffer->m_memory, 0, m_hostVertexBuffer->m_size);
-        {
-            memcpy(ptr, kVertices.data(), sizeof(kVertices));
-        }
-        device.unmapMemory(m_hostVertexBuffer->m_memory);
+        memcpy(m_hostVertexBuffer->m_map, kVertices.data(), sizeof(kVertices));
 
         copyBuffer(m_hostVertexBuffer->m_buffer, m_deviceVertexBuffer->m_buffer, m_hostVertexBuffer->m_size, 0, 0);
     }

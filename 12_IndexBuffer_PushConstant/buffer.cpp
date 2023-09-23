@@ -8,12 +8,25 @@ Buffer::Buffer(size_t size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags 
     auto & memInfo = queryMemoryInfo(property);
     allocateMemory(memInfo);
     bindingMem2Buf();
+
+    if (property & vk::MemoryPropertyFlagBits::eHostVisible) {
+        m_map = Context::GetInstance().GetDevice().mapMemory(m_memory, 0, m_size);
+    }
+    else
+    {
+        m_map = nullptr;
+    }
 }
 
 Buffer::~Buffer()
 {
-    Context::GetInstance().GetDevice().freeMemory(m_memory);
-    Context::GetInstance().GetDevice().destroyBuffer(m_buffer);
+    auto& device = Context::GetInstance().GetDevice();
+    if (m_map) {
+        device.unmapMemory(m_memory);
+    }
+
+    device.freeMemory(m_memory);
+    device.destroyBuffer(m_buffer);
 }
 
 void Buffer::createBuffer(size_t size, vk::BufferUsageFlags usage)
