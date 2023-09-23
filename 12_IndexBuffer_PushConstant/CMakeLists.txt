@@ -17,15 +17,19 @@ execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.vert 
 execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.frag -o ${INSTALL_PATH}/frag.spv)
 
 
-file(GLOB SRC_LIST "./*.cpp")
+file(GLOB SRC_LIST "./*.cpp" "./math/*.cpp")
 source_group("source" FILES ${SRC_LIST})
 
-file(GLOB  HEAD_LIST "./*.h" "./*.hpp")
+file(GLOB  HEAD_LIST "./*.h" "./*.hpp" "./math/*.hpp")
 source_group("include" FILES ${HEAD_LIST})
+
+file(GLOB  SHADER_LIST "./shader/*.*")
+source_group("include" FILES ${SHADER_LIST})
 
 set(ALL_SOURCES
 ${SRC_LIST}
 ${HEAD_LIST}
+${SHADER_LIST}
 )
 
 add_executable(${TARGET} ${ALL_SOURCES})

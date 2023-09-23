@@ -100,9 +100,8 @@ namespace toy2d {
 
     void Render_process::InitLayout()
     {
-        auto layout1 = createSetLayout();
-        auto layout2 = createSetLayout();
-        auto layoutArry = std::array<vk::DescriptorSetLayout, 2>{layout1, layout2};
+        auto layout = createSetLayout();
+        auto layoutArry = std::array<vk::DescriptorSetLayout, 1>{layout};
 
         // 设置 uniform 的布局
         vk::PipelineLayoutCreateInfo layoutInfo;

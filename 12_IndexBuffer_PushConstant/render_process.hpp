@@ -15,11 +15,13 @@ namespace toy2d {
         void InitRenderPass();
         vk::RenderPass& GetRenderPass() { return m_renderPass; }
         vk::Pipeline& GetPipeline() { return m_pipeline; }
+        vk::DescriptorSetLayout createSetLayout();
+
+        vk::PipelineLayout m_layout;
+
     private:
         vk::Pipeline m_pipeline;
-        vk::PipelineLayout m_layout;
         vk::RenderPass m_renderPass;
-        vk::DescriptorSetLayout createSetLayout();
 
         void DestroyPipeline();
         void DestroyLayout();
