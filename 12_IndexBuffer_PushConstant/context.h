@@ -9,6 +9,7 @@
 #include "render_process.hpp"
 #include "renderer.hpp"
 #include "command_manager.hpp"
+#include "shader.hpp"
 
 namespace toy2d
 {
@@ -42,13 +43,14 @@ namespace toy2d
         QueueFamilyIndices& GetQueueFamilyIndices() { return this->queueFamilyIndices; };
 
         void InitSwapchain(const int w, const int h);
-        void DestroySwapchain();
 
         void InitRenderer();
         void DestroyRenderer();
 
         void InitCommandPool();
-        void DestroyCommandPool();
+
+        void initShaderModules(const std::string& vertexSource, const std::string& fragSource);
+        void initGraphicsPipeline();
 
     private:
         Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
@@ -60,7 +62,7 @@ namespace toy2d
         void getQueues();
 
         /* data */
-        static std::unique_ptr<Context> m_instance;
+        static Context* m_instance;
 
         vk::Instance m_vkInstance;
         vk::PhysicalDevice m_phyDevice;
@@ -79,6 +81,7 @@ namespace toy2d
         std::unique_ptr<Render_process>m_renderProcess;
         std::unique_ptr<toy2d::Renderer>m_renderer;
         std::unique_ptr<CommandManager> m_commandManager;
+        std::unique_ptr<Shader> m_shader;
     };
 
 }

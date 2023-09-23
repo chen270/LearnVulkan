@@ -8,27 +8,20 @@ namespace toy2d{
         Context::Init(extensions, func);
         auto& ctx = Context::GetInstance();
         ctx.InitSwapchain(w, h);
-        Shader::Init(ReadWholeFile(S_PATH("./bin/vert.spv")), ReadWholeFile(S_PATH("./bin/frag.spv")));
+        ctx.initShaderModules(ReadWholeFile(S_PATH("./bin/vert.spv")), ReadWholeFile(S_PATH("./bin/frag.spv")));
         ctx.m_renderProcess->InitLayout();
         ctx.m_renderProcess->InitRenderPass();
         ctx.m_swapchain->createFramebuffers(w, h);
-        ctx.m_renderProcess->InitPipeline(w, h);
+        ctx.initGraphicsPipeline();
         ctx.InitCommandPool();
         ctx.InitRenderer();
+        Context::GetInstance().m_renderer->SetProject(w, 0, 0, h, -1, 1);
     }
 
     void Quit()
     {
         Context::GetInstance().GetDevice().waitIdle(); // 让 cpu 等待所有操作完成
         Context::GetInstance().DestroyRenderer();
-        Context::GetInstance().m_renderProcess.reset();
-        Shader::Quit();
-
-        Context::GetInstance().m_commandManager.reset();
-
-        // 需要先销毁 swapchain, 再销毁 device, 因为 swapchain 根据 device 创建的
-        Context::GetInstance().DestroySwapchain();
-
         Context::Quit();
     }
 

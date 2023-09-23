@@ -22,7 +22,7 @@ int main()
         SDL_WINDOWPOS_UNDEFINED, // 默认居中
         SDL_WINDOWPOS_UNDEFINED,
         width, height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
     if (!window) {
         SDL_Log("can not create window, err:%s\n", SDL_GetError());
         return 1;
@@ -55,17 +55,40 @@ int main()
 
     bool b_exit = true;
     SDL_Event event;
+    float x = 100, y = 100;
     while (b_exit)
     {
         SDL_WaitEvent(&event);
-        switch (event.type)
-        {
-        case SDL_QUIT:
-            SDL_Log("receive quit event\n");
+        if (event.type == SDL_QUIT) {
             b_exit = false;
             break;
         }
-        toyRenderer.DrawTriangle();
+        else if (event.type == SDL_KEYDOWN) {
+            // 注意：需要英文输入法
+            if (event.key.keysym.sym == SDLK_a) {
+                x -= 10;
+            }
+            if (event.key.keysym.sym == SDLK_d) {
+                x += 10;
+            }
+            if (event.key.keysym.sym == SDLK_w) {
+                y -= 10;
+            }
+            if (event.key.keysym.sym == SDLK_s) {
+                y += 10;
+            }
+            //if (event.key.keysym.sym == SDLK_0) {
+            //    renderer->SetDrawColor(toy2d::Color{ 1, 0, 0 });
+            //}
+            //if (event.key.keysym.sym == SDLK_1) {
+            //    renderer->SetDrawColor(toy2d::Color{ 0, 1, 0 });
+            //}
+            //if (event.key.keysym.sym == SDLK_2) {
+            //    renderer->SetDrawColor(toy2d::Color{ 0, 0, 1 });
+            //}
+        }
+        toyRenderer.DrawTriangle(toy2d::Rect{ toy2d::Vec{x, y},
+                                       toy2d::Size{200, 300} });
     }
 
     toy2d::Quit();

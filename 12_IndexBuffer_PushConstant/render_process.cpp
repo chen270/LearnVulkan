@@ -16,8 +16,18 @@ namespace toy2d {
         DestroyPipeline();
     }
 
-    void Render_process::InitPipeline(const int width, const int height)
+    void Render_process::RecreateGraphicsPipeline(const Shader& shader) {
+        if (m_pipeline) {
+            DestroyPipeline();
+        }
+        InitPipeline(shader);
+    }
+
+    void Render_process::InitPipeline(const Shader& shader)
     {
+        const int width = Context::GetInstance().m_swapchain->GetExtent().width;
+        const int height = Context::GetInstance().m_swapchain->GetExtent().height;
+
         vk::GraphicsPipelineCreateInfo createInfo;
 
         // 以下为渲染管线的流程
@@ -37,9 +47,15 @@ namespace toy2d {
             .setTopology(vk::PrimitiveTopology::eTriangleList);
         createInfo.setPInputAssemblyState(&inputAssemblyInfo);
 
-        // 3.shader
-        auto stages = Shader::GetInstance().GetStage(); // 这里需要拷贝，提高兼容性
-        createInfo.setStages(stages);
+        // 3. shader prepare
+        std::array<vk::PipelineShaderStageCreateInfo, 2> stageCreateInfos;
+        stageCreateInfos[0].setModule(shader.GetVertexModule())
+            .setPName("main")
+            .setStage(vk::ShaderStageFlagBits::eVertex);
+        stageCreateInfos[1].setModule(shader.GetFragModule())
+            .setPName("main")
+            .setStage(vk::ShaderStageFlagBits::eFragment);
+        createInfo.setStages(stageCreateInfos);
 
         // 4.viewport
         vk::PipelineViewportStateCreateInfo viewportState;
@@ -100,12 +116,11 @@ namespace toy2d {
 
     void Render_process::InitLayout()
     {
-        auto layout = createSetLayout();
-        auto layoutArry = std::array<vk::DescriptorSetLayout, 1>{layout};
+        auto layouts = Context::GetInstance().m_shader->GetDescriptorSetLayouts();
 
         // 设置 uniform 的布局
         vk::PipelineLayoutCreateInfo layoutInfo;
-        layoutInfo.setSetLayouts(layoutArry);
+        layoutInfo.setSetLayouts(layouts);
         m_layout = Context::GetInstance().GetDevice().createPipelineLayout(layoutInfo);
     }
 
@@ -158,11 +173,11 @@ namespace toy2d {
         device.destroyRenderPass(m_renderPass);
     }
 
-    vk::DescriptorSetLayout Render_process::createSetLayout() {
-        vk::DescriptorSetLayoutCreateInfo createInfo;
-        auto binding = Uniform::GetBinding();
-        createInfo.setBindings(binding);
+    //vk::DescriptorSetLayout Render_process::createSetLayout() {
+    //    vk::DescriptorSetLayoutCreateInfo createInfo;
+    //    auto binding = Uniform::GetBinding();
+    //    createInfo.setBindings(binding);
 
-        return Context::GetInstance().GetDevice().createDescriptorSetLayout(createInfo);
-    }
+    //    return Context::GetInstance().GetDevice().createDescriptorSetLayout(createInfo);
+    //}
 }

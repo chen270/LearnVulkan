@@ -10,37 +10,25 @@ namespace toy2d{
 class Shader final
 {
 public:
+    Shader(const std::string& vertexSource, const std::string& fragSource);
     ~Shader();
 
-    static void Init(const std::string & vertexSource, const std::string & fragSource);
-    static void Quit();
-    static Shader &GetInstance();
-
-    std::vector<vk::PipelineShaderStageCreateInfo> GetStage();
-
-    vk::ShaderModule& GetVertexModule() {
+    vk::ShaderModule GetVertexModule() const {
         return m_vertModule;
     }
-    vk::ShaderModule& GetFragModule() {
+    vk::ShaderModule GetFragModule() const {
         return m_fragModule;
     }
 
+    const std::vector<vk::DescriptorSetLayout>& GetDescriptorSetLayouts() const { return m_layouts; }
 private:
-    Shader(const std::string& vertexSource, const std::string& fragSource);
-
-    void InitStage();
+    void initDescriptorSetLayouts();
 
     vk::ShaderModule m_vertModule;
     vk::ShaderModule m_fragModule;
 
-    std::vector<vk::PipelineShaderStageCreateInfo> m_stageInfo;
-
-    static std::unique_ptr<Shader> m_instancePtr;
+    std::vector<vk::DescriptorSetLayout> m_layouts;
 };
-
-
-
-
 }
 
 #endif // __SHADER_H__

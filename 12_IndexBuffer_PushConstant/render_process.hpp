@@ -2,6 +2,7 @@
 #define __RENDER_PROCESS_H__
 
 #include "vulkan/vulkan.hpp"
+#include "shader.hpp"
 
 namespace toy2d {
     class Render_process final
@@ -11,14 +12,15 @@ namespace toy2d {
         ~Render_process();
 
         void InitLayout();
-        void InitPipeline(const int width, const int height);
+        void InitPipeline(const Shader& shader);
         void InitRenderPass();
         vk::RenderPass& GetRenderPass() { return m_renderPass; }
         vk::Pipeline& GetPipeline() { return m_pipeline; }
-        vk::DescriptorSetLayout createSetLayout();
+        //vk::DescriptorSetLayout createSetLayout();
 
         vk::PipelineLayout m_layout;
 
+        void RecreateGraphicsPipeline(const Shader& shader);
     private:
         vk::Pipeline m_pipeline;
         vk::RenderPass m_renderPass;

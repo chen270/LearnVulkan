@@ -4,7 +4,7 @@
 
 namespace toy2d
 {
-    std::unique_ptr<Context> Context::m_instance = nullptr;
+    Context* Context::m_instance = nullptr;
 
     static std::once_flag g_flag;
     Context& Context::GetInstance()
@@ -32,6 +32,10 @@ namespace toy2d
 
     Context::~Context()
     {
+        m_shader.reset();
+        m_commandManager.reset();
+        m_renderProcess.reset();
+        m_swapchain.reset();
         m_vkInstance.destroySurfaceKHR(m_surface);
         m_Device.destroy();
         m_vkInstance.destroy();
@@ -276,23 +280,26 @@ namespace toy2d
         m_swapchain.reset(new swapchain(w, h));
     }
 
-    void Context::DestroySwapchain()
-    {
-        m_swapchain.reset();
-    }
-
     void Context::InitCommandPool()
     {
         m_commandManager = std::make_unique<CommandManager>();
     }
 
+    void Context::initShaderModules(const std::string& vertexSource, const std::string& fragSource) {
+        m_shader = std::make_unique<Shader>(vertexSource, fragSource);
+    }
+
+    void Context::initGraphicsPipeline() {
+        m_renderProcess->RecreateGraphicsPipeline(*m_shader);
+    }
+
     void Context::Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func)
     {
-        m_instance.reset(new Context(extensions, func));
+        m_instance = new Context(extensions, func);
     }
 
     void Context::Quit()
     {
-        m_instance.reset();
+        delete m_instance;
     }
 }

@@ -24,7 +24,7 @@ file(GLOB  HEAD_LIST "./*.h" "./*.hpp" "./math/*.hpp")
 source_group("include" FILES ${HEAD_LIST})
 
 file(GLOB  SHADER_LIST "./shader/*.*")
-source_group("include" FILES ${SHADER_LIST})
+source_group("shader" FILES ${SHADER_LIST})
 
 set(ALL_SOURCES
 ${SRC_LIST}

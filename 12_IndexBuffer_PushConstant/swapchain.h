@@ -20,6 +20,8 @@ public:
 
     void createFramebuffers(const int w, const int h);
 
+    const auto& GetExtent() const { return m_swapchainInfo.imageExtent; }
+    const auto& GetFormat() const { return m_swapchainInfo.format; }
 
     vk::SwapchainKHR m_swapchain;
 

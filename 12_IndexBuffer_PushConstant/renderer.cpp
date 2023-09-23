@@ -9,7 +9,7 @@ namespace toy2d {
         Vertex{0.5, 0.5},
         Vertex{-0.5, 0.5}
     };
-    static const Uniform kUniform{ Color{0, 1, 0} };
+    static const  Color kColor{0, 1, 0} ;
 
 
     Renderer::Renderer(int maxFlightCount) :m_maxFlightCount(maxFlightCount), m_curFrame(0)
@@ -19,20 +19,27 @@ namespace toy2d {
         CreateCmdBuffer();
         createVertexBuffer();
         bufferVertexData();
-        createUniformBuffer();
-        bufferUniformData();
+        createColorBuffer();
+        bufferColorData();
+        createMVPBuffer();
         createDescriptorPool();
         allocateSets();
         updateSets();
+        initMats();
     }
 
     Renderer::~Renderer() {
         m_hostVertexBuffer.reset();
         m_deviceVertexBuffer.reset();
+        m_hostColorBuffers.clear();
+        m_deviceColorBuffers.clear();
+        m_hostMVPBuffers.clear();
+        m_deviceMVPBuffers.clear();
 
         auto& device = Context::GetInstance().GetDevice();
 
-        device.destroyDescriptorPool(m_descriptorPool);
+        device.destroyDescriptorPool(descriptorPool1_);
+        device.destroyDescriptorPool(descriptorPool2_);
 
         for (auto& i : m_cmdBuffers) {
             Context::GetInstance().m_commandManager->FreeCmd(i);
@@ -106,35 +113,35 @@ namespace toy2d {
         Context::GetInstance().m_commandManager->FreeCmd(cmdBuffer);
     }
 
-    void Renderer::createUniformBuffer() {
-        m_hostUniformBuffers.resize(m_maxFlightCount);
-        m_deviceUniformBuffers.resize(m_maxFlightCount);
+    void Renderer::createColorBuffer() {
+        m_hostColorBuffers.resize(m_maxFlightCount);
+        m_deviceColorBuffers.resize(m_maxFlightCount);
 
-        for (auto& buffer : m_hostUniformBuffers) {
+        for (auto& buffer : m_hostColorBuffers) {
             // CPU
-            buffer.reset(new Buffer(sizeof(kUniform),
+            buffer.reset(new Buffer(sizeof(Color),
                 vk::BufferUsageFlagBits::eTransferSrc,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
         }
 
-        for (auto& buffer : m_deviceUniformBuffers) {
+        for (auto& buffer : m_deviceColorBuffers) {
             // GPU
-            buffer.reset(new Buffer(sizeof(kUniform),
+            buffer.reset(new Buffer(sizeof(Color),
                 vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
                 vk::MemoryPropertyFlagBits::eDeviceLocal));
         }
     }
 
-    void Renderer::bufferUniformData() {
+    void Renderer::bufferColorData() {
         auto& device = Context::GetInstance().GetDevice();
 
-        for (int i = 0; i < m_hostUniformBuffers.size(); ++i) {
-            auto& host_buffer = m_hostUniformBuffers[i];
+        for (int i = 0; i < m_hostColorBuffers.size(); ++i) {
+            auto& host_buffer = m_hostColorBuffers[i];
 
             // 传输到 GPU
-            memcpy(host_buffer->m_map, &kUniform, sizeof(kUniform));
+            memcpy(host_buffer->m_map, &kColor, sizeof(Color));
 
-            copyBuffer(host_buffer->m_buffer, m_deviceUniformBuffers[i]->m_buffer, host_buffer->m_size, 0, 0);
+            copyBuffer(host_buffer->m_buffer, m_deviceColorBuffers[i]->m_buffer, host_buffer->m_size, 0, 0);
         }
     }
 
@@ -158,7 +165,7 @@ namespace toy2d {
         copyBuffer(m_hostVertexBuffer->m_buffer, m_deviceVertexBuffer->m_buffer, m_hostVertexBuffer->m_size, 0, 0);
     }
 
-    void Renderer::DrawTriangle()
+    void Renderer::DrawTriangle(const Rect& rect)
     {
         // 开始绘制三角形
         auto& device = Context::GetInstance().GetDevice();
@@ -169,6 +176,9 @@ namespace toy2d {
             throw std::runtime_error("wait for fence failed");
         }
         device.resetFences(m_cmdFences[m_curFrame]);
+
+        auto model = Mat4::CreateTranslate(rect.position).Mul(Mat4::CreateScale(rect.size));
+        bufferMVPData(model);
 
         // 该接口会阻塞程序, 第二个参数为等待时间，这里设置为无限等待
         auto result = device.acquireNextImageKHR(_swapchain->m_swapchain, std::numeric_limits<uint64_t>::max(), m_imageAvaliables[m_curFrame]);
@@ -204,7 +214,12 @@ namespace toy2d {
             {
                 m_cmdBuffers[m_curFrame].bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
                 static vk::DeviceSize offset = 0;
-                m_cmdBuffers[m_curFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, Context::GetInstance().m_renderProcess->m_layout, 0, m_sets[m_curFrame], {});
+                m_cmdBuffers[m_curFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                    Context::GetInstance().m_renderProcess->m_layout,
+                    0, m_descriptorSets.first[m_curFrame], {});
+                m_cmdBuffers[m_curFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                    Context::GetInstance().m_renderProcess->m_layout,
+                    1, m_descriptorSets.second[m_curFrame], {});
                 m_cmdBuffers[m_curFrame].bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
                 m_cmdBuffers[m_curFrame].draw(3, 1, 0, 0);
             }
@@ -240,41 +255,103 @@ namespace toy2d {
         vk::DescriptorPoolSize poolSize;
         poolSize.setType(vk::DescriptorType::eUniformBuffer)
             .setDescriptorCount(m_maxFlightCount);
-        createInfo.setMaxSets(m_maxFlightCount) // 创建个数
-            .setPoolSizes(poolSize); // 可以传递多个
 
-        m_descriptorPool = Context::GetInstance().GetDevice().createDescriptorPool(createInfo);
+        std::vector<vk::DescriptorPoolSize> sizes(2, poolSize);
+        createInfo.setMaxSets(m_maxFlightCount) // 创建个数
+            .setPoolSizes(sizes); // 可以传递多个
+
+        auto& device = Context::GetInstance().GetDevice();
+        descriptorPool1_ = device.createDescriptorPool(createInfo);
+        descriptorPool2_ = device.createDescriptorPool(createInfo);
     }
 
     void Renderer::allocateSets() {
-        std::vector<vk::DescriptorSetLayout> layouts(m_maxFlightCount, Context::GetInstance().m_renderProcess->createSetLayout());
-
-        vk::DescriptorSetAllocateInfo allocInfo;
-        allocInfo.setDescriptorPool(m_descriptorPool)
-            .setDescriptorSetCount(m_maxFlightCount)
-            .setSetLayouts(layouts);
+        auto& device = Context::GetInstance().GetDevice();
 
         // 不需要销毁，因为是从 m_descriptorPool 里面创建的，会一起销毁
-        m_sets = Context::GetInstance().GetDevice().allocateDescriptorSets(allocInfo);
+        std::vector layouts(m_maxFlightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[0]);
+        vk::DescriptorSetAllocateInfo allocInfo;
+        allocInfo.setDescriptorPool(descriptorPool1_)
+            .setSetLayouts(layouts);
+        m_descriptorSets.first = device.allocateDescriptorSets(allocInfo);
+
+        layouts = std::vector(m_maxFlightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[1]);
+        allocInfo.setDescriptorPool(descriptorPool2_)
+            .setSetLayouts(layouts);
+        m_descriptorSets.second = device.allocateDescriptorSets(allocInfo);
     }
 
     void Renderer::updateSets() {
-        for (int i = 0; i < m_sets.size(); ++i) {
-            auto& set = m_sets[i];
-            vk::DescriptorBufferInfo bufferInfo;
-            bufferInfo.setBuffer(m_deviceUniformBuffers[i]->m_buffer)
+        for (int i = 0; i < m_descriptorSets.first.size(); i++) {
+            // bind MVP buffer
+            vk::DescriptorBufferInfo bufferInfo1;
+            bufferInfo1.setBuffer(m_deviceMVPBuffers[i]->m_buffer)
                 .setOffset(0)
-                .setRange(m_deviceUniformBuffers[i]->m_size);
+                .setRange(sizeof(float) * 4 * 4 * 3);
 
-            vk::WriteDescriptorSet writer;
-            writer.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                .setBufferInfo(bufferInfo)
-                .setDstBinding(0) // shader binding 编号
-                .setDstSet(set)
-                .setDstArrayElement(0) // 绑定在 shader 中 uniform 数组的编号
-                .setDescriptorCount(1);
+            std::vector<vk::WriteDescriptorSet> writeInfos(2);
+            writeInfos[0].setBufferInfo(bufferInfo1)
+                .setDstBinding(0)
+                .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                .setDescriptorCount(1)
+                .setDstArrayElement(0)
+                .setDstSet(m_descriptorSets.first[i]);
 
-            Context::GetInstance().GetDevice().updateDescriptorSets(writer, {});
+            // bind Color buffer
+            vk::DescriptorBufferInfo bufferInfo2;
+            bufferInfo2.setBuffer(m_deviceColorBuffers[i]->m_buffer)
+                .setOffset(0)
+                .setRange(sizeof(float) * 3);
+
+            writeInfos[1].setBufferInfo(bufferInfo2)
+                .setDstBinding(0)
+                .setDstArrayElement(0)
+                .setDescriptorCount(1)
+                .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                .setDstSet(m_descriptorSets.second[i]);
+
+            Context::GetInstance().GetDevice().updateDescriptorSets(writeInfos, {});
         }
+    }
+
+    void Renderer::createMVPBuffer() {
+        m_hostMVPBuffers.resize(m_maxFlightCount);
+        m_deviceMVPBuffers.resize(m_maxFlightCount);
+
+        for (auto& buffer : m_hostMVPBuffers) {
+            // CPU
+            buffer.reset(new Buffer(sizeof(MVP),
+                vk::BufferUsageFlagBits::eTransferSrc,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+        }
+
+        for (auto& buffer : m_deviceMVPBuffers) {
+            // GPU
+            buffer.reset(new Buffer(sizeof(MVP),
+                vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
+                vk::MemoryPropertyFlagBits::eDeviceLocal));
+        }
+    }
+
+    void Renderer::bufferMVPData(const Mat4& model) {
+        MVP mvp;
+        mvp.project = projectMat_;
+        mvp.view = viewMat_;
+        mvp.model = model;
+        auto& device = Context::GetInstance().GetDevice();
+        for (int i = 0; i < m_hostMVPBuffers.size(); i++) {
+            auto& host_buffer = m_hostMVPBuffers[i];
+            memcpy(host_buffer->m_map, (void*)&mvp, sizeof(mvp));
+            copyBuffer(host_buffer->m_buffer, m_deviceMVPBuffers[i]->m_buffer, host_buffer->m_size, 0, 0);
+        }
+    }
+
+    void Renderer::initMats() {
+        viewMat_ = Mat4::CreateIdentity();
+        projectMat_ = Mat4::CreateIdentity();
+    }
+
+    void Renderer::SetProject(int right, int left, int bottom, int top, int far, int near) {
+        projectMat_ = Mat4::CreateOrtho(left, right, top, bottom, near, far);
     }
 }
