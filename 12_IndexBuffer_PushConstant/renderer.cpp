@@ -20,7 +20,7 @@ namespace toy2d {
         createVertexBuffer();
         bufferVertexData();
         createColorBuffer();
-        bufferColorData();
+        SetDrawColor(kColor);
         createMVPBuffer();
         createDescriptorPool();
         allocateSets();
@@ -132,14 +132,14 @@ namespace toy2d {
         }
     }
 
-    void Renderer::bufferColorData() {
+    void Renderer::SetDrawColor(Color color) {
         auto& device = Context::GetInstance().GetDevice();
 
         for (int i = 0; i < m_hostColorBuffers.size(); ++i) {
             auto& host_buffer = m_hostColorBuffers[i];
 
             // 传输到 GPU
-            memcpy(host_buffer->m_map, &kColor, sizeof(Color));
+            memcpy(host_buffer->m_map, &color, sizeof(Color));
 
             copyBuffer(host_buffer->m_buffer, m_deviceColorBuffers[i]->m_buffer, host_buffer->m_size, 0, 0);
         }

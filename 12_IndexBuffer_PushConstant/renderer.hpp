@@ -15,6 +15,7 @@ namespace toy2d {
 
         void DrawTriangle(const Rect& rect);
         void SetProject(int right, int left, int bottom, int top, int far, int near);
+        void SetDrawColor(Color kColor);
 
     private:
         void CreateCmdBuffer();
@@ -23,7 +24,6 @@ namespace toy2d {
         void createVertexBuffer();
         void bufferVertexData();
         void createColorBuffer();
-        void bufferColorData();
         void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
         void createDescriptorPool();
         void allocateSets();
