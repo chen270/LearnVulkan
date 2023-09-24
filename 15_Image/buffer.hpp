@@ -14,6 +14,7 @@ public:
     vk::DeviceMemory m_memory;
     size_t m_size;
     void* m_map;
+
 private:
     struct MemoryInfo final {
         size_t size;
@@ -24,6 +25,9 @@ private:
     void allocateMemory(const MemoryInfo& memInfo);
     void bindingMem2Buf();
     MemoryInfo queryMemoryInfo(vk::MemoryPropertyFlags property);
+
+public:
+    static std::uint32_t QueryBufferMemTypeIndex(std::uint32_t type, vk::MemoryPropertyFlags flag);
 };
 
 }

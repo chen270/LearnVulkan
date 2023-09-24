@@ -71,5 +71,18 @@ Buffer::MemoryInfo Buffer::queryMemoryInfo(vk::MemoryPropertyFlags property)
     return memInfol;
 }
 
+std::uint32_t Buffer::QueryBufferMemTypeIndex(std::uint32_t type, vk::MemoryPropertyFlags flag) {
+    auto property = Context::GetInstance().GetPhyDevice().getMemoryProperties();
+
+    for (std::uint32_t i = 0; i < property.memoryTypeCount; i++) {
+        if ((1 << i) & type &&
+            property.memoryTypes[i].propertyFlags & flag) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
 
 }

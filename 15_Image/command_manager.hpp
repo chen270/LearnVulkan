@@ -2,7 +2,7 @@
 #define __COMMAND_MANAGER_H__
 
 #include "vulkan/vulkan.hpp"
-
+#include <functional>
 namespace toy2d {
 
 class CommandManager final {
@@ -14,6 +14,9 @@ public:
     std::vector<vk::CommandBuffer> CreateCommandBuffers(std::uint32_t count);
     void ResetCmds();
     void FreeCmd(vk::CommandBuffer);
+
+    using RecordCmdFunc = std::function<void(vk::CommandBuffer&)>;
+    void ExecuteCmd(vk::Queue queue, RecordCmdFunc func);
 
 private:
     vk::CommandPool m_pool;
