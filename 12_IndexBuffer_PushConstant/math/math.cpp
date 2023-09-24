@@ -27,7 +27,7 @@ Mat4 Mat4::Create(const std::initializer_list<float>& initList) {
         int x = counter % 4;
         int y = counter / 4;
         mat.Set(y, x, value);
-        counter ++;
+        counter++;
     }
     return mat;
 }
@@ -52,12 +52,12 @@ Mat4 Mat4::CreateIdentity() {
 Mat4 Mat4::CreateOrtho(int left, int right, int top, int bottom, int near, int far) {
     Mat4 mat = CreateIdentity();
 
-    mat.Set(0, 0, 2.0 / (right - left));
-    mat.Set(1, 1, 2.0 / (top - bottom));
-    mat.Set(2, 2, 2.0 / (near - far));
-    mat.Set(3, 0, (left + right) / (left - right));
-    mat.Set(3, 1, (top + bottom) / (bottom - top));
-    mat.Set(3, 2, (near + far) / (far - near));
+    mat.Set(0, 0, static_cast<float>(2.0 / (right - left)));
+    mat.Set(1, 1, static_cast<float>(2.0 / (top - bottom)));
+    mat.Set(2, 2, static_cast<float>(2.0 / (near - far)));
+    mat.Set(3, 0, static_cast<float>((left + right) / (left - right)));
+    mat.Set(3, 1, static_cast<float>((top + bottom) / (bottom - top)));
+    mat.Set(3, 2, static_cast<float>((near + far) / (far - near)));
 
     return mat;
 }

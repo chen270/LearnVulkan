@@ -59,7 +59,7 @@ namespace toy2d {
 
         // 4.viewport
         vk::PipelineViewportStateCreateInfo viewportState;
-        vk::Viewport viewport(0, 0, width, height, 0, 1); // 多个viewport是否支持需要，查询，有些电脑不支持
+        vk::Viewport viewport(0, 0, static_cast<float>(width), static_cast<float>(height), 0, 1); // 多个viewport是否支持需要，查询，有些电脑不支持
         vk::Rect2D rect{ {0,0},{static_cast<uint32_t>(width), static_cast<uint32_t>(height)} };
         viewportState.setViewports(viewport).setScissors(rect);
         createInfo.setPViewportState(&viewportState);
