@@ -2,9 +2,10 @@
 #define __RENDERER_H__
 
 #include "vulkan/vulkan.hpp"
-#include "vertex.hpp"
+//#include "vertex.hpp"
 #include "buffer.hpp"
 #include "math/math.hpp"
+#include "texture2d.hpp"
 
 namespace toy2d {
     class Renderer final
@@ -28,11 +29,14 @@ namespace toy2d {
         void createColorBuffer();
         void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
         void createDescriptorPool();
-        void allocateSets();
+        std::vector<vk::DescriptorSet> Renderer::allocDescriptorSet(int flightCount);
+        void allocateSets(int flightCount);
         void updateSets();
         void createMVPBuffer();
         void bufferMVPData(/*const Mat4& model*/);
         void initMats();
+        void createSampler();
+        void createTexture();
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;
@@ -64,9 +68,11 @@ namespace toy2d {
         int m_maxFlightCount;
         int m_curFrame;
 
-        vk::DescriptorPool descriptorPool1_;
-        vk::DescriptorPool descriptorPool2_;
-        std::pair<std::vector<vk::DescriptorSet>, std::vector<vk::DescriptorSet>> m_descriptorSets;
+        vk::DescriptorPool descriptorPool_;
+        std::vector<vk::DescriptorSet> m_descriptorSets;
+
+        std::unique_ptr<Texture> m_texture;
+        vk::Sampler m_sampler;
     };
 }
 

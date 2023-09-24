@@ -33,19 +33,20 @@ Shader::~Shader()
 void Shader::initDescriptorSetLayouts() {
     auto& device = Context::GetInstance().GetDevice();
     vk::DescriptorSetLayoutCreateInfo createInfo;
-    vk::DescriptorSetLayoutBinding binding;
-    binding.setBinding(0)
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(3);
+    bindings[0].setBinding(0)
         .setDescriptorCount(1)
         .setDescriptorType(vk::DescriptorType::eUniformBuffer)
         .setStageFlags(vk::ShaderStageFlagBits::eVertex);
-    createInfo.setBindings(binding);
-    m_layouts.push_back(device.createDescriptorSetLayout(createInfo));
-
-    binding.setBinding(0)
+    bindings[1].setBinding(1)
         .setDescriptorCount(1)
         .setDescriptorType(vk::DescriptorType::eUniformBuffer)
         .setStageFlags(vk::ShaderStageFlagBits::eFragment);
-    createInfo.setBindings(binding);
+    bindings[2].setBinding(2)
+        .setDescriptorCount(1)
+        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+        .setStageFlags(vk::ShaderStageFlagBits::eFragment);
+    createInfo.setBindings(bindings);
     m_layouts.push_back(device.createDescriptorSetLayout(createInfo));
 }
 

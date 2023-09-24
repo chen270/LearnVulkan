@@ -33,8 +33,8 @@ namespace toy2d {
         // 以下为渲染管线的流程
 
         // 1.vertex input
-        auto attr = Vertex::GetAttribute();
-        auto binding = Vertex::GetBinding();
+        auto attr = Vec::GetAttributeDescription();
+        auto binding = Vec::GetBindingDescription();
 
         vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
         vertexInputCreateInfo.setVertexAttributeDescriptions(attr)

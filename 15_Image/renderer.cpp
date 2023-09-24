@@ -5,10 +5,10 @@
 namespace toy2d {
     // 顶点设置
     static std::array<Vertex, 4> kVertices = {
-       Vertex{-0.5f, -0.5f},
-       Vertex{0.5f, -0.5f},
-       Vertex{0.5f, 0.5f},
-       Vertex{-0.5f, 0.5f},
+        Vertex{Vec{-0.5, -0.5},Vec{0, 0}},
+        Vertex{Vec{0.5, -0.5} ,Vec{1, 0}},
+        Vertex{Vec{0.5, 0.5}  ,Vec{1, 1}},
+        Vertex{Vec{-0.5, 0.5} ,Vec{0, 1}},
     };
 
     std::uint32_t kIndices[] = {
@@ -34,12 +34,16 @@ namespace toy2d {
         createMVPBuffer();
         initMats();
 
+        createTexture();
+        createSampler();
+
         createDescriptorPool();
-        allocateSets();
+        allocateSets(maxFlightCount);
         updateSets();
     }
 
     Renderer::~Renderer() {
+        m_texture.reset();
         m_hostVertexBuffer.reset();
         m_deviceVertexBuffer.reset();
         m_hostIndexBuffer.reset();
@@ -51,8 +55,8 @@ namespace toy2d {
 
         auto& device = Context::GetInstance().GetDevice();
 
-        device.destroyDescriptorPool(descriptorPool1_);
-        device.destroyDescriptorPool(descriptorPool2_);
+        device.destroySampler(m_sampler);
+        device.destroyDescriptorPool(descriptorPool_);
 
         for (auto& i : m_cmdBuffers) {
             Context::GetInstance().m_commandManager->FreeCmd(i);
@@ -247,16 +251,15 @@ namespace toy2d {
             cmd.beginRenderPass(renderPassBeginInfo, {});
             {
                 cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
+
                 static vk::DeviceSize offset = 0;
+                cmd.bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
+                cmd.bindIndexBuffer(m_deviceIndexBuffer->m_buffer, 0, vk::IndexType::eUint32);
+
                 auto& layout = Context::GetInstance().m_renderProcess->m_layout;
                 cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                     layout,
-                    0, m_descriptorSets.first[m_curFrame], {});
-                cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                    layout,
-                    1, m_descriptorSets.second[m_curFrame], {});
-                cmd.bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
-                cmd.bindIndexBuffer(m_deviceIndexBuffer->m_buffer, 0, vk::IndexType::eUint32);
+                    0, m_descriptorSets[m_curFrame], {});
 
                 auto model = Mat4::CreateTranslate(rect.position).Mul(Mat4::CreateScale(rect.size));
                 cmd.pushConstants(layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(Mat4), model.GetData());
@@ -292,63 +295,73 @@ namespace toy2d {
 
     void Renderer::createDescriptorPool() {
         vk::DescriptorPoolCreateInfo createInfo;
-        vk::DescriptorPoolSize poolSize;
-        poolSize.setType(vk::DescriptorType::eUniformBuffer)
+        std::vector<vk::DescriptorPoolSize> poolSizes(2);
+        poolSizes[0].setType(vk::DescriptorType::eUniformBuffer)
+            .setDescriptorCount(m_maxFlightCount * 2);
+
+        poolSizes[1].setType(vk::DescriptorType::eCombinedImageSampler)
             .setDescriptorCount(m_maxFlightCount);
 
-        std::vector<vk::DescriptorPoolSize> sizes(2, poolSize);
+        //std::vector<vk::DescriptorPoolSize> sizes(2, poolSize);
         createInfo.setMaxSets(m_maxFlightCount) // 创建个数
-            .setPoolSizes(sizes); // 可以传递多个
+            .setPoolSizes(poolSizes); // 可以传递多个
 
         auto& device = Context::GetInstance().GetDevice();
-        descriptorPool1_ = device.createDescriptorPool(createInfo);
-        descriptorPool2_ = device.createDescriptorPool(createInfo);
+        descriptorPool_ = device.createDescriptorPool(createInfo);
     }
 
-    void Renderer::allocateSets() {
-        auto& device = Context::GetInstance().GetDevice();
-
-        // 不需要销毁，因为是从 m_descriptorPool 里面创建的，会一起销毁
-        std::vector layouts(m_maxFlightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[0]);
+    std::vector<vk::DescriptorSet> Renderer::allocDescriptorSet(int flightCount) {
+        std::vector layouts(flightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[0]);
         vk::DescriptorSetAllocateInfo allocInfo;
-        allocInfo.setDescriptorPool(descriptorPool1_)
+        allocInfo.setDescriptorPool(descriptorPool_)
             .setSetLayouts(layouts);
-        m_descriptorSets.first = device.allocateDescriptorSets(allocInfo);
+        return Context::GetInstance().GetDevice().allocateDescriptorSets(allocInfo);
+    }
 
-        layouts = std::vector(m_maxFlightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[1]);
-        allocInfo.setDescriptorPool(descriptorPool2_)
-            .setSetLayouts(layouts);
-        m_descriptorSets.second = device.allocateDescriptorSets(allocInfo);
+    void Renderer::allocateSets(int flightCount) {
+        m_descriptorSets = allocDescriptorSet(flightCount);
     }
 
     void Renderer::updateSets() {
-        for (int i = 0; i < m_descriptorSets.first.size(); i++) {
+        for (int i = 0; i < m_descriptorSets.size(); i++) {
             // bind MVP buffer
             vk::DescriptorBufferInfo bufferInfo1;
             bufferInfo1.setBuffer(m_deviceMVPBuffers[i]->m_buffer)
                 .setOffset(0)
-                .setRange(sizeof(float) * 4 * 4 * 2); // 改成 2 个矩阵大小
+                .setRange(sizeof(Mat4) * 2); // 改成 2 个矩阵大小
 
-            std::vector<vk::WriteDescriptorSet> writeInfos(2);
+            std::vector<vk::WriteDescriptorSet> writeInfos(3);
             writeInfos[0].setBufferInfo(bufferInfo1)
                 .setDstBinding(0)
                 .setDescriptorType(vk::DescriptorType::eUniformBuffer)
                 .setDescriptorCount(1)
                 .setDstArrayElement(0)
-                .setDstSet(m_descriptorSets.first[i]);
+                .setDstSet(m_descriptorSets[i]);
 
             // bind Color buffer
             vk::DescriptorBufferInfo bufferInfo2;
             bufferInfo2.setBuffer(m_deviceColorBuffers[i]->m_buffer)
                 .setOffset(0)
-                .setRange(sizeof(float) * 3);
+                .setRange(sizeof(Color));
 
             writeInfos[1].setBufferInfo(bufferInfo2)
-                .setDstBinding(0)
+                .setDstBinding(1) // 根据shader中 bind 修改为1
                 .setDstArrayElement(0)
                 .setDescriptorCount(1)
                 .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                .setDstSet(m_descriptorSets.second[i]);
+                .setDstSet(m_descriptorSets[i]);
+
+            // image
+            vk::DescriptorImageInfo imageInfo;
+            imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+                .setImageView(m_texture->m_view)
+                .setSampler(m_sampler);
+            writeInfos[2].setImageInfo(imageInfo)
+                .setDstBinding(2)
+                .setDstArrayElement(0)
+                .setDescriptorCount(1)
+                .setDescriptorType(vk::DescriptorType::eCombinedImageSampler )
+                .setDstSet(m_descriptorSets[i]);
 
             Context::GetInstance().GetDevice().updateDescriptorSets(writeInfos, {});
         }
@@ -394,5 +407,24 @@ namespace toy2d {
     void Renderer::SetProject(int right, int left, int bottom, int top, int far, int near) {
         projectMat_ = Mat4::CreateOrtho(left, right, top, bottom, near, far);
         bufferMVPData();
+    }
+
+    void Renderer::createSampler() {
+        vk::SamplerCreateInfo createInfo;
+        createInfo.setMagFilter(vk::Filter::eLinear)
+            .setMinFilter(vk::Filter::eLinear)
+            .setAddressModeU(vk::SamplerAddressMode::eRepeat)
+            .setAddressModeV(vk::SamplerAddressMode::eRepeat)
+            .setAddressModeW(vk::SamplerAddressMode::eRepeat)
+            .setAnisotropyEnable(false)
+            .setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+            .setUnnormalizedCoordinates(false)
+            .setCompareEnable(false)
+            .setMipmapMode(vk::SamplerMipmapMode::eLinear);
+        m_sampler = Context::GetInstance().GetDevice().createSampler(createInfo);
+    }
+
+    void Renderer::createTexture() {
+        m_texture.reset(new Texture(S_PATH("./resources/texture.jpg")));
     }
 }

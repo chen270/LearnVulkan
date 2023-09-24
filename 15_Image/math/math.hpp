@@ -11,8 +11,13 @@ struct Vec {
         struct { float w, h; };
     };
 
-    static vk::VertexInputAttributeDescription GetAttributeDescription();
+    static std::vector<vk::VertexInputAttributeDescription> GetAttributeDescription();
     static vk::VertexInputBindingDescription GetBindingDescription();
+};
+
+struct Vertex final {
+    Vec position;
+    Vec texcoord;
 };
 
 struct Color {

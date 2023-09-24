@@ -86,6 +86,9 @@ int main()
             if (event.key.keysym.sym == SDLK_2) {
                 toyRenderer.SetDrawColor(toy2d::Color{ 0, 0, 1 });
             }
+            if (event.key.keysym.sym == SDLK_3) {
+                toyRenderer.SetDrawColor(toy2d::Color{ 1, 1, 1 });
+            }
         }
         toyRenderer.DrawRect(toy2d::Rect{ toy2d::Vec{x, y},
                                        toy2d::Size{200, 300} });
