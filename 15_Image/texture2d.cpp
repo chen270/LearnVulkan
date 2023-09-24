@@ -44,6 +44,7 @@ namespace toy2d {
     {
         auto& device = Context::GetInstance().GetDevice();
 
+        device.destroyImageView(m_view);
         device.freeMemory(m_memory);
         device.destroyImage(m_image);
     }
