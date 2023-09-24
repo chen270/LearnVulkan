@@ -185,6 +185,10 @@ namespace toy2d
         vk::PhysicalDeviceProperties deviceProperties = physicalDevices[0].getProperties();
         vk::PhysicalDeviceFeatures deviceFeatures = physicalDevices[0].getFeatures();
 
+        // 查询 PushConstants 限制大小
+        auto maxPushConstantsSize = deviceProperties.limits.maxPushConstantsSize;
+        std::cout << "maxPushConstantsSize: " << maxPushConstantsSize << std::endl;
+
         m_phyDevice = physicalDevices[0]; // 自信输入
     }
 
