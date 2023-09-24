@@ -189,15 +189,16 @@ namespace toy2d {
 
         // 拿到 image 下标
         auto imageIndex = result.value;
+        auto& cmd = m_cmdBuffers[m_curFrame];
 
         // 清空命令buffer, 与之前代码
         // createInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer); 对应
         // 否则需要清空整个pool
-        m_cmdBuffers[m_curFrame].reset();
+        cmd.reset();
 
         vk::CommandBufferBeginInfo cmdbeginInfo;
         cmdbeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit); // 这里设置为每次重置
-        m_cmdBuffers[m_curFrame].begin(cmdbeginInfo);
+        cmd.begin(cmdbeginInfo);
         {
             vk::RenderPassBeginInfo renderPassBeginInfo;
             vk::Rect2D area;
@@ -210,27 +211,27 @@ namespace toy2d {
                 .setRenderArea(area)
                 .setFramebuffer(_swapchain->m_framebuffers[imageIndex])
                 .setClearValues(clearValue);
-            m_cmdBuffers[m_curFrame].beginRenderPass(renderPassBeginInfo, {});
+            cmd.beginRenderPass(renderPassBeginInfo, {});
             {
-                m_cmdBuffers[m_curFrame].bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
+                cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
                 static vk::DeviceSize offset = 0;
-                m_cmdBuffers[m_curFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                     Context::GetInstance().m_renderProcess->m_layout,
                     0, m_descriptorSets.first[m_curFrame], {});
-                m_cmdBuffers[m_curFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                     Context::GetInstance().m_renderProcess->m_layout,
                     1, m_descriptorSets.second[m_curFrame], {});
-                m_cmdBuffers[m_curFrame].bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
-                m_cmdBuffers[m_curFrame].draw(3, 1, 0, 0);
+                cmd.bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
+                cmd.draw(3, 1, 0, 0);
             }
-            m_cmdBuffers[m_curFrame].endRenderPass();
+            cmd.endRenderPass();
         }
-        m_cmdBuffers[m_curFrame].end();
+        cmd.end();
 
         // 命令传入 GPU
         vk::PipelineStageFlags const pipe_stage_flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
         vk::SubmitInfo submitInfo;
-        submitInfo.setCommandBuffers(m_cmdBuffers[m_curFrame])
+        submitInfo.setCommandBuffers(cmd)
             .setWaitSemaphores(m_imageAvaliables[m_curFrame])
             .setSignalSemaphores(m_imageDrawFinishs[m_curFrame])
             .setWaitDstStageMask(pipe_stage_flags);
