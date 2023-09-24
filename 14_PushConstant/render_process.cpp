@@ -120,7 +120,9 @@ namespace toy2d {
 
         // 设置 uniform 的布局
         vk::PipelineLayoutCreateInfo layoutInfo;
-        layoutInfo.setSetLayouts(layouts);
+        auto range = Context::GetInstance().m_shader->GetPushConstantRange();
+        layoutInfo.setSetLayouts(layouts)
+            .setPushConstantRanges(range);
         m_layout = Context::GetInstance().GetDevice().createPipelineLayout(layoutInfo);
     }
 

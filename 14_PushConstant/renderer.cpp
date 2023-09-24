@@ -29,11 +29,14 @@ namespace toy2d {
         bufferIndexData();
         createColorBuffer();
         SetDrawColor(kColor);
+
+        // mvp
         createMVPBuffer();
+        initMats();
+
         createDescriptorPool();
         allocateSets();
         updateSets();
-        initMats();
     }
 
     Renderer::~Renderer() {
@@ -207,8 +210,8 @@ namespace toy2d {
         }
         device.resetFences(m_cmdFences[m_curFrame]);
 
-        auto model = Mat4::CreateTranslate(rect.position).Mul(Mat4::CreateScale(rect.size));
-        bufferMVPData(model);
+        //auto model = Mat4::CreateTranslate(rect.position).Mul(Mat4::CreateScale(rect.size));
+        //bufferMVPData(model);
 
         // 该接口会阻塞程序, 第二个参数为等待时间，这里设置为无限等待
         auto result = device.acquireNextImageKHR(_swapchain->m_swapchain, std::numeric_limits<uint64_t>::max(), m_imageAvaliables[m_curFrame]);
@@ -245,100 +248,18 @@ namespace toy2d {
             {
                 cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
                 static vk::DeviceSize offset = 0;
+                auto& layout = Context::GetInstance().m_renderProcess->m_layout;
                 cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                    Context::GetInstance().m_renderProcess->m_layout,
+                    layout,
                     0, m_descriptorSets.first[m_curFrame], {});
                 cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                    Context::GetInstance().m_renderProcess->m_layout,
-                    1, m_descriptorSets.second[m_curFrame], {});
-                cmd.bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
-                cmd.draw(3, 1, 0, 0);
-            }
-            cmd.endRenderPass();
-        }
-        cmd.end();
-
-        // 命令传入 GPU
-        vk::PipelineStageFlags const pipe_stage_flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        vk::SubmitInfo submitInfo;
-        submitInfo.setCommandBuffers(cmd)
-            .setWaitSemaphores(m_imageAvaliables[m_curFrame])
-            .setSignalSemaphores(m_imageDrawFinishs[m_curFrame])
-            .setWaitDstStageMask(pipe_stage_flags);
-
-        // vk::SubmitInfo submitInfo;
-        Context::GetInstance().m_graphicsQueue.submit(submitInfo, m_cmdFences[m_curFrame]);
-
-        // 开始显示
-        vk::PresentInfoKHR presentInfo;
-        presentInfo.setImageIndices(imageIndex)
-            .setSwapchains(_swapchain->m_swapchain)
-            .setWaitSemaphores(m_imageDrawFinishs[m_curFrame]);
-        if (Context::GetInstance().m_presentQueue.presentKHR(presentInfo) != vk::Result::eSuccess) {
-            std::cout << "presentKHR error" << std::endl;
-        }
-
-        m_curFrame = (m_curFrame + 1) % m_maxFlightCount;
-    }
-
-    void Renderer::DrawTriangle(const Rect& rect)
-    {
-        // 开始绘制三角形
-        auto& device = Context::GetInstance().GetDevice();
-        auto& _swapchain = Context::GetInstance().m_swapchain;
-        auto& _render_process = Context::GetInstance().m_renderProcess;
-
-        if (device.waitForFences(m_cmdFences[m_curFrame], true, std::numeric_limits<std::uint64_t>::max()) != vk::Result::eSuccess) {
-            throw std::runtime_error("wait for fence failed");
-        }
-        device.resetFences(m_cmdFences[m_curFrame]);
-
-        auto model = Mat4::CreateTranslate(rect.position).Mul(Mat4::CreateScale(rect.size));
-        bufferMVPData(model);
-
-        // 该接口会阻塞程序, 第二个参数为等待时间，这里设置为无限等待
-        auto result = device.acquireNextImageKHR(_swapchain->m_swapchain, std::numeric_limits<uint64_t>::max(), m_imageAvaliables[m_curFrame]);
-        // device.acquireNextImage2KHR
-        if (result.result != vk::Result::eSuccess) {
-            std::cout << "acquireNextImageKHR error" << std::endl;
-        }
-
-        // 拿到 image 下标
-        auto imageIndex = result.value;
-        auto& cmd = m_cmdBuffers[m_curFrame];
-
-        // 清空命令buffer, 与之前代码
-        // createInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer); 对应
-        // 否则需要清空整个pool
-        cmd.reset();
-
-        vk::CommandBufferBeginInfo cmdbeginInfo;
-        cmdbeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit); // 这里设置为每次重置
-        cmd.begin(cmdbeginInfo);
-        {
-            vk::RenderPassBeginInfo renderPassBeginInfo;
-            vk::Rect2D area;
-            area.setOffset({ 0, 0 }).setExtent(_swapchain->m_swapchainInfo.imageExtent);
-
-            vk::ClearValue clearValue; // 可以设置 0-255 uint32, 也可以设置 0~1 float
-            clearValue.color = vk::ClearColorValue(std::array < float, 4>{0.1f, 0.1f, 1.0f, 1.0f});
-
-            renderPassBeginInfo.setRenderPass(_render_process->GetRenderPass())
-                .setRenderArea(area)
-                .setFramebuffer(_swapchain->m_framebuffers[imageIndex])
-                .setClearValues(clearValue);
-            cmd.beginRenderPass(renderPassBeginInfo, {});
-            {
-                cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, _render_process->GetPipeline());
-                static vk::DeviceSize offset = 0;
-                cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                    Context::GetInstance().m_renderProcess->m_layout,
-                    0, m_descriptorSets.first[m_curFrame], {});
-                cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                    Context::GetInstance().m_renderProcess->m_layout,
+                    layout,
                     1, m_descriptorSets.second[m_curFrame], {});
                 cmd.bindVertexBuffers(0, m_deviceVertexBuffer->m_buffer, offset);
                 cmd.bindIndexBuffer(m_deviceIndexBuffer->m_buffer, 0, vk::IndexType::eUint32);
+
+                auto model = Mat4::CreateTranslate(rect.position).Mul(Mat4::CreateScale(rect.size));
+                cmd.pushConstants(layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(Mat4), model.GetData());
 
                 cmd.drawIndexed(6, 1, 0, 0, 0);
             }
@@ -406,7 +327,7 @@ namespace toy2d {
             vk::DescriptorBufferInfo bufferInfo1;
             bufferInfo1.setBuffer(m_deviceMVPBuffers[i]->m_buffer)
                 .setOffset(0)
-                .setRange(sizeof(float) * 4 * 4 * 3);
+                .setRange(sizeof(float) * 4 * 4 * 2); // 改成 2 个矩阵大小
 
             std::vector<vk::WriteDescriptorSet> writeInfos(2);
             writeInfos[0].setBufferInfo(bufferInfo1)
@@ -452,11 +373,11 @@ namespace toy2d {
         }
     }
 
-    void Renderer::bufferMVPData(const Mat4& model) {
+    void Renderer::bufferMVPData(/*const Mat4& model*/) {
         MVP mvp;
         mvp.project = projectMat_;
         mvp.view = viewMat_;
-        mvp.model = model;
+        //mvp.model = model;
         auto& device = Context::GetInstance().GetDevice();
         for (int i = 0; i < m_hostMVPBuffers.size(); i++) {
             auto& host_buffer = m_hostMVPBuffers[i];
@@ -472,5 +393,6 @@ namespace toy2d {
 
     void Renderer::SetProject(int right, int left, int bottom, int top, int far, int near) {
         projectMat_ = Mat4::CreateOrtho(left, right, top, bottom, near, far);
+        bufferMVPData();
     }
 }

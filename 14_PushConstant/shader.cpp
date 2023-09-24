@@ -49,4 +49,12 @@ void Shader::initDescriptorSetLayouts() {
     m_layouts.push_back(device.createDescriptorSetLayout(createInfo));
 }
 
+vk::PushConstantRange Shader::GetPushConstantRange() const {
+    vk::PushConstantRange range;
+    range.setOffset(0)
+        .setSize(sizeof(Mat4))
+        .setStageFlags(vk::ShaderStageFlagBits::eVertex); // 指定哪个着色器使用
+    return range;
+}
+
 }

@@ -21,6 +21,8 @@ public:
     }
 
     const std::vector<vk::DescriptorSetLayout>& GetDescriptorSetLayouts() const { return m_layouts; }
+
+    vk::PushConstantRange GetPushConstantRange() const;
 private:
     void initDescriptorSetLayouts();
 

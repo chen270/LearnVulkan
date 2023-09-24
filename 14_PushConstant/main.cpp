@@ -87,7 +87,7 @@ int main()
                 toyRenderer.SetDrawColor(toy2d::Color{ 0, 0, 1 });
             }
         }
-        toyRenderer.DrawTriangle(toy2d::Rect{ toy2d::Vec{x, y},
+        toyRenderer.DrawRect(toy2d::Rect{ toy2d::Vec{x, y},
                                        toy2d::Size{200, 300} });
     }
 

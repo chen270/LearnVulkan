@@ -14,7 +14,6 @@ namespace toy2d {
         ~Renderer();
 
         void DrawRect(const Rect& rect);
-        void DrawTriangle(const Rect& rect);
         void SetProject(int right, int left, int bottom, int top, int far, int near);
         void SetDrawColor(Color kColor);
 
@@ -32,7 +31,7 @@ namespace toy2d {
         void allocateSets();
         void updateSets();
         void createMVPBuffer();
-        void bufferMVPData(const Mat4& model);
+        void bufferMVPData(/*const Mat4& model*/);
         void initMats();
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
@@ -56,7 +55,7 @@ namespace toy2d {
         struct MVP {
             Mat4 project;
             Mat4 view;
-            Mat4 model;
+            //Mat4 model;
         };
 
         //vk::DescriptorPool m_descriptorPool;
