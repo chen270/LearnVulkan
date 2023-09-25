@@ -85,6 +85,43 @@ namespace toy2d {
 
 
         // 8.color Blending, 暂不开启
+#if 1
+        // 公式法开启
+        vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
+        vk::PipelineColorBlendAttachmentState blendAttachmentState;
+        blendAttachmentState.setBlendEnable(true)
+            .setColorWriteMask(vk::ColorComponentFlagBits::eA |
+                vk::ColorComponentFlagBits::eB |
+                vk::ColorComponentFlagBits::eG |
+                vk::ColorComponentFlagBits::eR)
+            .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+            .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+            .setColorBlendOp(vk::BlendOp::eAdd)
+            .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+            .setDstAlphaBlendFactor(vk::BlendFactor::eZero)
+            .setAlphaBlendOp(vk::BlendOp::eAdd);
+
+
+        colorBlendInfo.setLogicOpEnable(false)
+            .setAttachments(blendAttachmentState);
+        createInfo.setPColorBlendState(&colorBlendInfo);
+
+#elif 0
+        // 按位操作混合
+        vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
+        vk::PipelineColorBlendAttachmentState blendAttachmentState;
+        blendAttachmentState.setBlendEnable(true)
+            .setColorWriteMask(vk::ColorComponentFlagBits::eA |
+                vk::ColorComponentFlagBits::eB |
+                vk::ColorComponentFlagBits::eG |
+                vk::ColorComponentFlagBits::eR);
+
+        colorBlendInfo.setLogicOpEnable(true)
+            .setLogicOp(vk::LogicOp::eCopy)
+            .setAttachments(blendAttachmentState);
+        createInfo.setPColorBlendState(&colorBlendInfo);
+#else
+        // 不开启
         vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
         vk::PipelineColorBlendAttachmentState attachState;
         attachState.setBlendEnable(false)
@@ -96,6 +133,7 @@ namespace toy2d {
         colorBlendInfo.setLogicOpEnable(false)
             .setAttachments(attachState);
         createInfo.setPColorBlendState(&colorBlendInfo);
+#endif
 
         // 9.renderPass, Layout
         createInfo.setRenderPass(m_renderPass)

@@ -425,6 +425,7 @@ namespace toy2d {
     }
 
     void Renderer::createTexture() {
-        m_texture.reset(new Texture(S_PATH("./resources/texture.jpg")));
+        //m_texture.reset(new Texture(S_PATH("./resources/texture.jpg")));
+        m_texture.reset(new Texture(S_PATH("./resources/role.png")));
     }
 }
