@@ -189,6 +189,10 @@ namespace toy2d
         auto maxPushConstantsSize = deviceProperties.limits.maxPushConstantsSize;
         std::cout << "maxPushConstantsSize: " << maxPushConstantsSize << std::endl;
 
+        // 查询是否支持按位操作混合
+        auto isLogicOp = deviceFeatures.logicOp;
+        std::cout << "isLogicOp: " << isLogicOp << std::endl;
+
         m_phyDevice = physicalDevices[0]; // 自信输入
     }
 
@@ -234,8 +238,10 @@ namespace toy2d
             queueCreateInfos.push_back(std::move(queueCreateInfo2));
         }
 
+        vk::PhysicalDeviceFeatures deviceFeatures = m_phyDevice.getFeatures();
         createInfo.setQueueCreateInfos(queueCreateInfos)
-            .setPEnabledExtensionNames(extensions);
+            .setPEnabledExtensionNames(extensions).
+            setPEnabledFeatures(&deviceFeatures);
 
 
         m_Device = m_phyDevice.createDevice(createInfo);
