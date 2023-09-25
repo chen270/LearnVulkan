@@ -56,6 +56,7 @@ int main()
     bool b_exit = true;
     SDL_Event event;
     float x = 100, y = 100;
+    toyRenderer.SetDrawColor(toy2d::Color{ 1, 1, 1 });
     while (b_exit)
     {
         SDL_WaitEvent(&event);
@@ -91,7 +92,7 @@ int main()
             }
         }
         toyRenderer.DrawRect(toy2d::Rect{ toy2d::Vec{x, y},
-                                       toy2d::Size{200, 300} });
+                                       toy2d::Size{200, 200} });
     }
 
     toy2d::Quit();
