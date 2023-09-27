@@ -37,9 +37,10 @@ namespace toy2d {
         createTexture();
         createSampler();
 
-        createDescriptorPool();
-        allocateSets(maxFlightCount);
-        updateSets();
+        descriptorSets_ = DescriptorSetManager::GetInstance().allocBufferDescriptorSet(m_maxFlightCount);
+        updateBufferSets();
+        //createDescriptorPool();
+        //allocateSets(maxFlightCount);
     }
 
     Renderer::~Renderer() {
@@ -56,7 +57,7 @@ namespace toy2d {
         auto& device = Context::GetInstance().GetDevice();
 
         device.destroySampler(m_sampler);
-        device.destroyDescriptorPool(descriptorPool_);
+        //device.destroyDescriptorPool(descriptorPool_);
 
         for (auto& i : m_cmdBuffers) {
             Context::GetInstance().m_commandManager->FreeCmd(i);
@@ -259,7 +260,7 @@ namespace toy2d {
                 auto& layout = Context::GetInstance().m_renderProcess->m_layout;
                 cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                     layout,
-                    0, m_descriptorSets[m_curFrame], {});
+                    0, descriptorSets_[m_curFrame].set, {});
 
                 auto model = Mat4::CreateTranslate(rect.position).Mul(Mat4::CreateScale(rect.size));
                 cmd.pushConstants(layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(Mat4), model.GetData());
@@ -293,37 +294,45 @@ namespace toy2d {
         m_curFrame = (m_curFrame + 1) % m_maxFlightCount;
     }
 
-    void Renderer::createDescriptorPool() {
-        vk::DescriptorPoolCreateInfo createInfo;
-        std::vector<vk::DescriptorPoolSize> poolSizes(2);
-        poolSizes[0].setType(vk::DescriptorType::eUniformBuffer)
-            .setDescriptorCount(m_maxFlightCount * 2);
+    //void Renderer::createDescriptorPool() {
+    //    vk::DescriptorPoolCreateInfo createInfo;
+    //    std::vector<vk::DescriptorPoolSize> poolSizes(2);
+    //    poolSizes[0].setType(vk::DescriptorType::eUniformBuffer)
+    //        .setDescriptorCount(m_maxFlightCount * 2);
 
-        poolSizes[1].setType(vk::DescriptorType::eCombinedImageSampler)
-            .setDescriptorCount(m_maxFlightCount);
+    //    poolSizes[1].setType(vk::DescriptorType::eCombinedImageSampler)
+    //        .setDescriptorCount(m_maxFlightCount);
 
-        //std::vector<vk::DescriptorPoolSize> sizes(2, poolSize);
-        createInfo.setMaxSets(m_maxFlightCount) // 创建个数
-            .setPoolSizes(poolSizes); // 可以传递多个
+    //    //std::vector<vk::DescriptorPoolSize> sizes(2, poolSize);
+    //    createInfo.setMaxSets(m_maxFlightCount) // 创建个数
+    //        .setPoolSizes(poolSizes); // 可以传递多个
 
-        auto& device = Context::GetInstance().GetDevice();
-        descriptorPool_ = device.createDescriptorPool(createInfo);
-    }
+    //    auto& device = Context::GetInstance().GetDevice();
+    //    bufferDescriptorPool_ = device.createDescriptorPool(createInfo);
+    //}
 
-    std::vector<vk::DescriptorSet> Renderer::allocDescriptorSet(int flightCount) {
-        std::vector layouts(flightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[0]);
-        vk::DescriptorSetAllocateInfo allocInfo;
-        allocInfo.setDescriptorPool(descriptorPool_)
-            .setSetLayouts(layouts);
-        return Context::GetInstance().GetDevice().allocateDescriptorSets(allocInfo);
-    }
+    //std::vector<vk::DescriptorSet> Renderer::allocBufferDescriptorSet(int flightCount) {
+    //    std::vector layouts(flightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[0]);
+    //    vk::DescriptorSetAllocateInfo allocInfo;
+    //    allocInfo.setDescriptorPool(bufferDescriptorPool_)
+    //        .setSetLayouts(layouts);
+    //    return Context::GetInstance().GetDevice().allocateDescriptorSets(allocInfo);
+    //}
 
-    void Renderer::allocateSets(int flightCount) {
-        m_descriptorSets = allocDescriptorSet(flightCount);
-    }
+    //void Renderer::allocateBufferSets(int flightCount) {
+    //    m_bufferDescriptorSets = allocBufferDescriptorSet(flightCount);
+    //}
 
-    void Renderer::updateSets() {
-        for (int i = 0; i < m_descriptorSets.size(); i++) {
+    //std::vector<vk::DescriptorSet> Renderer::allocImageDescriptorSet(int idx, int flightCount) {
+    //    std::vector layouts(flightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[1]);
+    //    vk::DescriptorSetAllocateInfo allocInfo;
+    //    allocInfo.setDescriptorPool(imagesDescriptorPool_[idx])
+    //        .setSetLayouts(layouts);
+    //    return Context::GetInstance().GetDevice().allocateDescriptorSets(allocInfo);
+    //}
+
+    void Renderer::updateBufferSets() {
+        for (int i = 0; i < descriptorSets_.size(); i++) {
             // bind MVP buffer
             vk::DescriptorBufferInfo bufferInfo1;
             bufferInfo1.setBuffer(m_deviceMVPBuffers[i]->m_buffer)
@@ -336,7 +345,7 @@ namespace toy2d {
                 .setDescriptorType(vk::DescriptorType::eUniformBuffer)
                 .setDescriptorCount(1)
                 .setDstArrayElement(0)
-                .setDstSet(m_descriptorSets[i]);
+                .setDstSet(descriptorSets_[i].set);
 
             // bind Color buffer
             vk::DescriptorBufferInfo bufferInfo2;
@@ -349,23 +358,28 @@ namespace toy2d {
                 .setDstArrayElement(0)
                 .setDescriptorCount(1)
                 .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                .setDstSet(m_descriptorSets[i]);
-
-            // image
-            vk::DescriptorImageInfo imageInfo;
-            imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-                .setImageView(m_texture->m_view)
-                .setSampler(m_sampler);
-            writeInfos[2].setImageInfo(imageInfo)
-                .setDstBinding(2)
-                .setDstArrayElement(0)
-                .setDescriptorCount(1)
-                .setDescriptorType(vk::DescriptorType::eCombinedImageSampler )
-                .setDstSet(m_descriptorSets[i]);
+                .setDstSet(descriptorSets_[i].set);
 
             Context::GetInstance().GetDevice().updateDescriptorSets(writeInfos, {});
         }
     }
+
+    //void Renderer::updateImageSets(std::unique_ptr<Texture>& texture) {
+    //    // image
+    //    std::vector<vk::WriteDescriptorSet> writeInfos(1);
+    //    vk::DescriptorImageInfo imageInfo;
+    //    imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+    //        .setImageView(texture->m_view)
+    //        .setSampler(m_sampler);
+    //    writeInfos[i].setImageInfo(imageInfo)
+    //        .setDstBinding(2)
+    //        .setDstArrayElement(0)
+    //        .setDescriptorCount(1)
+    //        .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+    //        .setDstSet(m_imageDescriptorSets[i]);
+
+    //    Context::GetInstance().GetDevice().updateDescriptorSets(writeInfos, {});
+    //}
 
     void Renderer::createMVPBuffer() {
         m_hostMVPBuffers.resize(m_maxFlightCount);
@@ -426,6 +440,12 @@ namespace toy2d {
 
     void Renderer::createTexture() {
         //m_texture.reset(new Texture(S_PATH("./resources/texture.jpg")));
-        m_texture.reset(new Texture(S_PATH("./resources/role.png")));
+        //m_texture.reset(new Texture(S_PATH("./resources/role.png")));
     }
+
+    void Renderer::LoadTexture(const std::string& filename) {
+        std::unique_ptr<Texture> ptr(new Texture(filename));
+        m_textures.push_back(std::move(ptr));
+    }
+
 }

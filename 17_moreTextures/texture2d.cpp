@@ -38,10 +38,14 @@ namespace toy2d {
         createImageView();
 
         stbi_image_free(pixels);
+
+        m_setInfo = DescriptorSetManager::GetInstance().AllocImageSet();
     }
 
     Texture::~Texture()
     {
+        DescriptorSetManager::GetInstance().FreeImageSet(m_setInfo);
+
         auto& device = Context::GetInstance().GetDevice();
 
         device.destroyImageView(m_view);

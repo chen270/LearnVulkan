@@ -44,7 +44,7 @@ namespace toy2d
 
         void InitSwapchain(const int w, const int h);
 
-        void InitRenderer();
+        void InitRenderer(int maxFlightCount);
         void DestroyRenderer();
 
         void InitCommandPool();

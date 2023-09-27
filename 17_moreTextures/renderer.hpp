@@ -1,11 +1,13 @@
 ﻿#ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include <unordered_map>
 #include "vulkan/vulkan.hpp"
 //#include "vertex.hpp"
 #include "buffer.hpp"
 #include "math/math.hpp"
 #include "texture2d.hpp"
+
 
 namespace toy2d {
     class Renderer final
@@ -28,15 +30,19 @@ namespace toy2d {
         void bufferIndexData();
         void createColorBuffer();
         void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
-        void createDescriptorPool();
-        std::vector<vk::DescriptorSet> Renderer::allocDescriptorSet(int flightCount);
-        void allocateSets(int flightCount);
-        void updateSets();
+        /*void createDescriptorPool();
+        std::vector<vk::DescriptorSet> allocBufferDescriptorSet(int flightCount);
+        std::vector<vk::DescriptorSet> allocImageDescriptorSet(int idx, int flightCount);
+        void allocateBufferSets(int flightCount);
+        void allocateImageSets(int idx, int flightCount);*/
+        void updateBufferSets();
+        void updateImageSets(std::unique_ptr<Texture>& texture);
         void createMVPBuffer();
         void bufferMVPData(/*const Mat4& model*/);
         void initMats();
         void createSampler();
         void createTexture();
+        void LoadTexture(const std::string& filename);
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;
@@ -68,11 +74,17 @@ namespace toy2d {
         int m_maxFlightCount;
         int m_curFrame;
 
-        vk::DescriptorPool descriptorPool_;
-        std::vector<vk::DescriptorSet> m_descriptorSets;
+        std::vector<DescriptorSetManager::SetInfo> descriptorSets_;
+        //vk::DescriptorPool bufferDescriptorPool_;
+        //std::unordered_map<int, vk::DescriptorPool>imagesDescriptorPool_;
 
-        std::unique_ptr<Texture> m_texture;
+        //std::vector<vk::DescriptorSet> m_bufferDescriptorSets;
+        //std::vector<vk::DescriptorSet> m_imageDescriptorSets;
+
+        std::vector<std::unique_ptr<Texture>> m_textures;
+        //std::unique_ptr<Texture> m_texture;
         vk::Sampler m_sampler;
+
     };
 }
 

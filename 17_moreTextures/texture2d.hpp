@@ -5,6 +5,7 @@
 
 #include "vulkan/vulkan.hpp"
 #include "buffer.hpp"
+#include "descriptor_manager.hpp"
 
 namespace toy2d {
     class Texture
@@ -24,6 +25,8 @@ namespace toy2d {
         void transitionImageLayoutFromUndefine2Dst();
         void transitionImageLayoutFromDst2Optimal();
         void transformData2Image(Buffer&, uint32_t w, uint32_t h);
+
+        DescriptorSetManager::SetInfo m_setInfo;
     };
 
 }

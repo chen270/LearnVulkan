@@ -1,6 +1,7 @@
 ﻿#include "toy2d.h"
 #include "context.h"
 #include "shader.hpp"
+#include "descriptor_manager.hpp"
 
 namespace toy2d{
     void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func, const int w, const int h)
@@ -14,7 +15,10 @@ namespace toy2d{
         ctx.m_swapchain->createFramebuffers(w, h);
         ctx.initGraphicsPipeline();
         ctx.InitCommandPool();
-        ctx.InitRenderer();
+
+        int maxFlightCount = 2;
+        DescriptorSetManager::Init(maxFlightCount);
+        ctx.InitRenderer(maxFlightCount);
         Context::GetInstance().m_renderer->SetProject(w, 0, 0, h, -1, 1);
     }
 

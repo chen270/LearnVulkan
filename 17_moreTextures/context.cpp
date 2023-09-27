@@ -275,9 +275,9 @@ namespace toy2d
         m_presentQueue = m_Device.getQueue(queueFamilyIndices.presentQueue.value(), 0);
     }
 
-    void Context::InitRenderer()
+    void Context::InitRenderer(int maxFlightCount)
     {
-        m_renderer.reset(new Renderer());
+        m_renderer.reset(new Renderer(maxFlightCount));
     }
 
     void Context::DestroyRenderer()
