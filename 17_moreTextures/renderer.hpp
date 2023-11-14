@@ -1,11 +1,13 @@
 ﻿#ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include <unordered_map>
 #include "vulkan/vulkan.hpp"
 //#include "vertex.hpp"
 #include "buffer.hpp"
 #include "math/math.hpp"
 #include "texture2d.hpp"
+
 
 namespace toy2d {
     class Renderer final
@@ -17,6 +19,11 @@ namespace toy2d {
         void DrawRect(const Rect& rect);
         void SetProject(int right, int left, int bottom, int top, int far, int near);
         void SetDrawColor(Color kColor);
+        vk::Sampler GetSampler() { return m_sampler; };
+
+        void DrawTexture(const Rect& rect, Texture& texture);
+        void StartRender();
+        void EndRender();
 
     private:
         void CreateCmdBuffer();
@@ -28,10 +35,8 @@ namespace toy2d {
         void bufferIndexData();
         void createColorBuffer();
         void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
-        void createDescriptorPool();
-        std::vector<vk::DescriptorSet> Renderer::allocDescriptorSet(int flightCount);
-        void allocateSets(int flightCount);
-        void updateSets();
+        void updateBufferSets();
+        void updateImageSets(std::unique_ptr<Texture>& texture);
         void createMVPBuffer();
         void bufferMVPData(/*const Mat4& model*/);
         void initMats();
@@ -62,17 +67,13 @@ namespace toy2d {
             //Mat4 model;
         };
 
-        //vk::DescriptorPool m_descriptorPool;
-        //std::vector<vk::DescriptorSet> m_sets; // 描述符集
-
         int m_maxFlightCount;
         int m_curFrame;
 
-        vk::DescriptorPool descriptorPool_;
-        std::vector<vk::DescriptorSet> m_descriptorSets;
-
-        std::unique_ptr<Texture> m_texture;
+        std::vector<DescriptorSetManager::SetInfo> descriptorSets_;
         vk::Sampler m_sampler;
+
+        uint32_t m_imageIndex;
     };
 }
 

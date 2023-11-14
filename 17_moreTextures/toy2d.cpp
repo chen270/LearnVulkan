@@ -1,6 +1,7 @@
 ﻿#include "toy2d.h"
 #include "context.h"
 #include "shader.hpp"
+#include "descriptor_manager.hpp"
 
 namespace toy2d{
     void Init(const std::vector<const char*>& extensions, CreateSurfaceFunc func, const int w, const int h)
@@ -9,12 +10,16 @@ namespace toy2d{
         auto& ctx = Context::GetInstance();
         ctx.InitSwapchain(w, h);
         ctx.initShaderModules(ReadWholeFile(S_PATH("./bin/vert.spv")), ReadWholeFile(S_PATH("./bin/frag.spv")));
-        ctx.m_renderProcess->InitLayout();
-        ctx.m_renderProcess->InitRenderPass();
+        ctx.initRenderProcess();
+        //ctx.m_renderProcess->InitLayout();
+        //ctx.m_renderProcess->InitRenderPass();
         ctx.m_swapchain->createFramebuffers(w, h);
         ctx.initGraphicsPipeline();
         ctx.InitCommandPool();
-        ctx.InitRenderer();
+
+        int maxFlightCount = 2;
+        DescriptorSetManager::Init(maxFlightCount);
+        ctx.InitRenderer(maxFlightCount);
         Context::GetInstance().m_renderer->SetProject(w, 0, 0, h, -1, 1);
     }
 
@@ -28,4 +33,8 @@ namespace toy2d{
     Renderer& GetRenderer() {
         return *Context::GetInstance().m_renderer;
     };
+
+    Texture* LoadTexture(const std::string& filename) {
+        return TextureManager::Instance().Load(filename);
+    }
 }

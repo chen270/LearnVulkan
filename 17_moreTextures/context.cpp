@@ -27,7 +27,6 @@ namespace toy2d
         queryQueueFamilyIndices();
         createDevice();
         getQueues();
-        m_renderProcess.reset(new Render_process());
     }
 
     Context::~Context()
@@ -275,9 +274,9 @@ namespace toy2d
         m_presentQueue = m_Device.getQueue(queueFamilyIndices.presentQueue.value(), 0);
     }
 
-    void Context::InitRenderer()
+    void Context::InitRenderer(int maxFlightCount)
     {
-        m_renderer.reset(new Renderer());
+        m_renderer.reset(new Renderer(maxFlightCount));
     }
 
     void Context::DestroyRenderer()
@@ -297,6 +296,10 @@ namespace toy2d
 
     void Context::initShaderModules(const std::string& vertexSource, const std::string& fragSource) {
         m_shader = std::make_unique<Shader>(vertexSource, fragSource);
+    }
+
+    void Context::initRenderProcess() {
+        m_renderProcess.reset(new Render_process());
     }
 
     void Context::initGraphicsPipeline() {

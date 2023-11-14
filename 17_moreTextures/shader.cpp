@@ -33,7 +33,7 @@ Shader::~Shader()
 void Shader::initDescriptorSetLayouts() {
     auto& device = Context::GetInstance().GetDevice();
     vk::DescriptorSetLayoutCreateInfo createInfo;
-    std::vector<vk::DescriptorSetLayoutBinding> bindings(3);
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
     bindings[0].setBinding(0)
         .setDescriptorCount(1)
         .setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -42,7 +42,12 @@ void Shader::initDescriptorSetLayouts() {
         .setDescriptorCount(1)
         .setDescriptorType(vk::DescriptorType::eUniformBuffer)
         .setStageFlags(vk::ShaderStageFlagBits::eFragment);
-    bindings[2].setBinding(2)
+    createInfo.setBindings(bindings);
+    m_layouts.push_back(device.createDescriptorSetLayout(createInfo));
+
+    // 拆分成两个，方法更新 image
+    bindings.resize(1);
+    bindings[0].setBinding(0)
         .setDescriptorCount(1)
         .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
         .setStageFlags(vk::ShaderStageFlagBits::eFragment);

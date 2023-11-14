@@ -44,13 +44,14 @@ namespace toy2d
 
         void InitSwapchain(const int w, const int h);
 
-        void InitRenderer();
+        void InitRenderer(int maxFlightCount);
         void DestroyRenderer();
 
         void InitCommandPool();
 
         void initShaderModules(const std::string& vertexSource, const std::string& fragSource);
         void initGraphicsPipeline();
+        void initRenderProcess();
 
     private:
         Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);
