@@ -56,6 +56,10 @@ int main()
     bool b_exit = true;
     SDL_Event event;
     float x = 100, y = 100;
+
+    toy2d::Texture* texture1 = toy2d::LoadTexture(S_PATH("resources/role.png"));
+    toy2d::Texture* texture2 = toy2d::LoadTexture(S_PATH("resources/texture.jpg"));
+
     toyRenderer.SetDrawColor(toy2d::Color{ 1, 1, 1 });
     while (b_exit)
     {
@@ -91,8 +95,13 @@ int main()
                 toyRenderer.SetDrawColor(toy2d::Color{ 1, 1, 1 });
             }
         }
-        toyRenderer.DrawRect(toy2d::Rect{ toy2d::Vec{x, y},
-                                       toy2d::Size{200, 200} });
+        //toyRenderer.DrawRect(toy2d::Rect{ toy2d::Vec{x, y},
+        //                               toy2d::Size{200, 200} });
+
+        toyRenderer.StartRender();
+        toyRenderer.DrawTexture(toy2d::Rect{ toy2d::Vec{x, y}, toy2d::Size{200, 300} }, *texture1);
+        toyRenderer.DrawTexture(toy2d::Rect{ toy2d::Vec{500, 100}, toy2d::Size{200, 300} }, *texture2);
+        toyRenderer.EndRender();
     }
 
     toy2d::Quit();

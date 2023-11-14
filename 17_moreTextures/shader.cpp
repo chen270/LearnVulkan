@@ -33,7 +33,7 @@ Shader::~Shader()
 void Shader::initDescriptorSetLayouts() {
     auto& device = Context::GetInstance().GetDevice();
     vk::DescriptorSetLayoutCreateInfo createInfo;
-    std::vector<vk::DescriptorSetLayoutBinding> bindings(3);
+    std::vector<vk::DescriptorSetLayoutBinding> bindings(2);
     bindings[0].setBinding(0)
         .setDescriptorCount(1)
         .setDescriptorType(vk::DescriptorType::eUniformBuffer)

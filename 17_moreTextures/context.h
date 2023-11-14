@@ -51,6 +51,7 @@ namespace toy2d
 
         void initShaderModules(const std::string& vertexSource, const std::string& fragSource);
         void initGraphicsPipeline();
+        void initRenderProcess();
 
     private:
         Context(const std::vector<const char*>& extensions, CreateSurfaceFunc func);

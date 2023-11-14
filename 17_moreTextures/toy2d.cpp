@@ -10,8 +10,9 @@ namespace toy2d{
         auto& ctx = Context::GetInstance();
         ctx.InitSwapchain(w, h);
         ctx.initShaderModules(ReadWholeFile(S_PATH("./bin/vert.spv")), ReadWholeFile(S_PATH("./bin/frag.spv")));
-        ctx.m_renderProcess->InitLayout();
-        ctx.m_renderProcess->InitRenderPass();
+        ctx.initRenderProcess();
+        //ctx.m_renderProcess->InitLayout();
+        //ctx.m_renderProcess->InitRenderPass();
         ctx.m_swapchain->createFramebuffers(w, h);
         ctx.initGraphicsPipeline();
         ctx.InitCommandPool();
@@ -32,4 +33,8 @@ namespace toy2d{
     Renderer& GetRenderer() {
         return *Context::GetInstance().m_renderer;
     };
+
+    Texture* LoadTexture(const std::string& filename) {
+        return TextureManager::Instance().Load(filename);
+    }
 }

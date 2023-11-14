@@ -7,6 +7,9 @@
 namespace toy2d {
     Render_process::Render_process(/* args */)
     {
+        InitLayout();
+        InitRenderPass();
+        m_pipeline = nullptr;
     }
 
     Render_process::~Render_process()

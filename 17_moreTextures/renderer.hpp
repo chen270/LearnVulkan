@@ -19,6 +19,11 @@ namespace toy2d {
         void DrawRect(const Rect& rect);
         void SetProject(int right, int left, int bottom, int top, int far, int near);
         void SetDrawColor(Color kColor);
+        vk::Sampler GetSampler() { return m_sampler; };
+
+        void DrawTexture(const Rect& rect, Texture& texture);
+        void StartRender();
+        void EndRender();
 
     private:
         void CreateCmdBuffer();
@@ -30,11 +35,6 @@ namespace toy2d {
         void bufferIndexData();
         void createColorBuffer();
         void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
-        /*void createDescriptorPool();
-        std::vector<vk::DescriptorSet> allocBufferDescriptorSet(int flightCount);
-        std::vector<vk::DescriptorSet> allocImageDescriptorSet(int idx, int flightCount);
-        void allocateBufferSets(int flightCount);
-        void allocateImageSets(int idx, int flightCount);*/
         void updateBufferSets();
         void updateImageSets(std::unique_ptr<Texture>& texture);
         void createMVPBuffer();
@@ -42,7 +42,6 @@ namespace toy2d {
         void initMats();
         void createSampler();
         void createTexture();
-        void LoadTexture(const std::string& filename);
 
         std::vector<vk::CommandBuffer> m_cmdBuffers;
         std::vector<vk::Semaphore> m_imageAvaliables;
@@ -68,23 +67,13 @@ namespace toy2d {
             //Mat4 model;
         };
 
-        //vk::DescriptorPool m_descriptorPool;
-        //std::vector<vk::DescriptorSet> m_sets; // 描述符集
-
         int m_maxFlightCount;
         int m_curFrame;
 
         std::vector<DescriptorSetManager::SetInfo> descriptorSets_;
-        //vk::DescriptorPool bufferDescriptorPool_;
-        //std::unordered_map<int, vk::DescriptorPool>imagesDescriptorPool_;
-
-        //std::vector<vk::DescriptorSet> m_bufferDescriptorSets;
-        //std::vector<vk::DescriptorSet> m_imageDescriptorSets;
-
-        std::vector<std::unique_ptr<Texture>> m_textures;
-        //std::unique_ptr<Texture> m_texture;
         vk::Sampler m_sampler;
 
+        uint32_t m_imageIndex;
     };
 }
 

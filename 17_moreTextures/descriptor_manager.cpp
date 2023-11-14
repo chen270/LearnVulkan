@@ -49,6 +49,21 @@ void DescriptorSetManager::createBufferDescriptorPool() {
     bufferSetPool_.remainNum_ = m_maxFlightCount;
 }
 
+
+void DescriptorSetManager::createImageSetPool() {
+    constexpr uint32_t MaxSetNum = 10;
+
+    vk::DescriptorPoolSize size;
+    size.setType(vk::DescriptorType::eCombinedImageSampler)
+        .setDescriptorCount(MaxSetNum);
+    vk::DescriptorPoolCreateInfo createInfo;
+    createInfo.setMaxSets(MaxSetNum)
+        .setPoolSizes(size)
+        .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet);
+    auto pool = Context::GetInstance().GetDevice().createDescriptorPool(createInfo);
+    avalibleImageSetPool_.push_back({ pool, MaxSetNum });
+}
+
 std::vector<DescriptorSetManager::SetInfo> DescriptorSetManager::allocBufferDescriptorSet(uint32_t num) {
     std::vector layouts(m_maxFlightCount, Context::GetInstance().m_shader->GetDescriptorSetLayouts()[0]);
     vk::DescriptorSetAllocateInfo allocInfo;
@@ -64,20 +79,6 @@ std::vector<DescriptorSetManager::SetInfo> DescriptorSetManager::allocBufferDesc
     }
 
     return result;
-}
-
-void DescriptorSetManager::createImageSetPool() {
-    constexpr uint32_t MaxSetNum = 10;
-
-    vk::DescriptorPoolSize size;
-    size.setType(vk::DescriptorType::eCombinedImageSampler)
-        .setDescriptorCount(MaxSetNum);
-    vk::DescriptorPoolCreateInfo createInfo;
-    createInfo.setMaxSets(MaxSetNum)
-        .setPoolSizes(size)
-        .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet);
-    auto pool = Context::GetInstance().GetDevice().createDescriptorPool(createInfo);
-    avalibleImageSetPool_.push_back({ pool, MaxSetNum });
 }
 
 DescriptorSetManager::SetInfo DescriptorSetManager::AllocImageSet() {

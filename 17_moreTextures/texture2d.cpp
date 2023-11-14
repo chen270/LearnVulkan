@@ -40,6 +40,8 @@ namespace toy2d {
         stbi_image_free(pixels);
 
         m_setInfo = DescriptorSetManager::GetInstance().AllocImageSet();
+
+        updateDescriptorSet();
     }
 
     Texture::~Texture()
@@ -161,5 +163,33 @@ namespace toy2d {
             .setFormat(vk::Format::eR8G8B8A8Srgb)
             .setSubresourceRange(range);
         m_view = Context::GetInstance().GetDevice().createImageView(createInfo);
+    }
+
+    std::unique_ptr<TextureManager> TextureManager::instance_ = nullptr;
+    void TextureManager::Destroy(Texture* texture) {
+        auto it = std::find_if(datas_.begin(), datas_.end(),
+            [&](const std::unique_ptr<Texture>& t) {
+            return t.get() == texture;
+        });
+        if (it != datas_.end()) {
+            Context::GetInstance().GetDevice().waitIdle();
+            datas_.erase(it);
+            return;
+        }
+    }
+
+    void Texture::updateDescriptorSet() {
+        vk::WriteDescriptorSet writer;
+        vk::DescriptorImageInfo imageInfo;
+        imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+            .setImageView(m_view)
+            .setSampler(Context::GetInstance().m_renderer->GetSampler());
+        writer.setImageInfo(imageInfo)
+            .setDstBinding(0)
+            .setDstArrayElement(0)
+            .setDstSet(m_setInfo.set)
+            .setDescriptorCount(1)
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+        Context::GetInstance().GetDevice().updateDescriptorSets(writer, {});
     }
 }
